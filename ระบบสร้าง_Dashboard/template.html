@@ -42,6 +42,27 @@ select#monthSel{font-family:'Sarabun';font-size:.92rem;font-weight:600;padding:9
 .kpi .sub{font-size:.76rem;color:var(--muted);margin-top:5px}
 .kpi.good .val{color:var(--green)} .kpi.bad .val{color:var(--red)} .kpi.warn .val{color:var(--amber)}
 
+/* Plan selector boxes */
+.planboxes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:24px 0 4px}
+@media(max-width:820px){.planboxes{grid-template-columns:1fr}}
+.planbox{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px 17px;box-shadow:var(--shadow);cursor:pointer;transition:.15s;position:relative;overflow:hidden}
+.planbox::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--accent,var(--navy))}
+.planbox:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(22,54,92,.14)}
+.planbox.active{border-color:var(--navy);box-shadow:0 8px 22px rgba(22,54,92,.20);background:#fbfdff}
+.planbox.dim{opacity:.6}
+.planbox .pbtag{font-size:.72rem;font-weight:700;color:var(--blue);letter-spacing:.4px}
+.planbox .pbname{font-size:.82rem;color:var(--text);font-weight:600;margin-top:3px;line-height:1.35;height:2.5em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.planbox .pbnum{display:flex;align-items:baseline;gap:7px;margin-top:9px}
+.planbox .pbnum b{font-size:1.7rem;font-weight:800;color:var(--navy)}
+.planbox .pbnum small{font-size:.76rem;color:var(--muted)}
+.planbox .pbnum .chip{margin-left:auto}
+.planbox .track{height:8px;border-radius:6px;background:#eef2f7;margin-top:9px;position:relative}
+.planbox .track .fill{height:100%;border-radius:6px}
+.planbox .track .tmark{position:absolute;top:-3px;width:2px;height:14px;background:var(--amber)}
+.planbox .pbmeta{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-top:9px}
+.planhint{font-size:.76rem;color:var(--muted);margin:6px 0 14px}
+.planhint b{color:var(--navy)}
+.planhint a{color:var(--blue);cursor:pointer;text-decoration:underline}
 /* Cards */
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:22px 24px;margin-bottom:20px;box-shadow:var(--shadow)}
 .card h2{font-size:1rem;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:9px;margin-bottom:4px}
@@ -150,6 +171,8 @@ footer{font-size:.76rem;color:var(--muted);text-align:center;margin-top:30px;lin
 </header>
 
 <div class="wrap">
+  <div class="planboxes" id="planBoxes"></div>
+  <div class="planhint" id="planHint"></div>
   <div class="kpis" id="kpis"></div>
 
   <div class="grid2">
@@ -254,14 +277,21 @@ function loadActualRows(rows){
 function planAt(a,m){let v=0;for(let i=0;i<=m;i++)if(a.plan[i]!=null)v=a.plan[i];return v;}
 function actualAt(id,m){let r=null;const rec=ACTUAL[id]||{};for(let i=0;i<=m;i++)if(rec[i]&&rec[i].v!=null)r=rec[i].v;return r;}
 function lastInfo(id,m,key){let r=null;const rec=ACTUAL[id]||{};for(let i=0;i<=m;i++)if(rec[i]&&rec[i][key])r=rec[i][key];return r;}
+/* ---- รวมยอดระดับกิจกรรมย่อย (leaf) ---- */
+const LEAF={},LEAVES=[];
+ACTIVITIES.forEach(a=>{ if(a.subs&&a.subs.length){a.subs.forEach(x=>{LEAF[x.id]={name:x.name,pc:x.code,pn:a.name};LEAVES.push(x.id);});} else {LEAF[a.id]={name:a.name,pc:a.code,pn:a.name};LEAVES.push(a.id);} });
+function leafIds(a){return (a.subs&&a.subs.length)?a.subs.map(x=>x.id):[a.id];}
+function actAct(a,m){const ids=leafIds(a);let sum=0,any=false;for(const id of ids){const v=actualAt(id,m);if(v!=null){any=true;sum+=v;}}return any?sum/ids.length:null;}
+function actHasData(a,m){for(const id of leafIds(a))for(let j=0;j<=m;j++){const r=ACTUAL[id];if(r&&r[j]&&r[j].v!=null)return true;}return false;}
+function wsAct(a,m){const ids=leafIds(a);let nd=0,doing=0;for(const id of ids){const st=lastInfo(id,m,'st');if(st===DONE)nd++;else if(st===DOING)doing++;}if(nd===ids.length)return DONE;if(nd>0||doing>0)return DOING;return NOT;}
 function overall(list,m,useActual){let s=0,wsum=0,has=false;
-  for(const a of list){const v=useActual?actualAt(a.id,m):planAt(a,m); wsum+=a.weight;
+  for(const a of list){const v=useActual?actAct(a,m):planAt(a,m); wsum+=a.weight;
     if(useActual&&v==null)continue; has=true; s+=a.weight/100*(v??0);}
   if(useActual&&!has)return null;
   // normalize ถ้า subset ไม่ครบ 100
   return wsum>0? s*(100/ (list===ACTIVITIES?100:wsum)) : s;
 }
-function status(a,m){const t=planAt(a,m),v=actualAt(a.id,m);
+function status(a,m){const t=planAt(a,m),v=actAct(a,m);
   if(t===0)return{cls:'n',txt:'ยังไม่ถึงกำหนด'};
   if(v==null)return{cls:'b',txt:'รอรายงานผล'};
   const d=v-t; if(d>=0)return{cls:'g',txt:d>0?'เร็วกว่าแผน':'ตามแผน'};
@@ -274,14 +304,45 @@ function wsChip(s){if(s===DONE)return `<span class="chip g">✓ ${DONE}</span>`;
   if(s===NOT)return `<span class="chip n">○ ${NOT}</span>`;return '<span class="chip n">–</span>';}
 
 let curM=5, scurve=null, secbar=null, hasActual=false;
+let selPlan=null;  // null = ทุกแผน
+function scopeActs(){return selPlan?ACTIVITIES.filter(a=>a.section===selPlan):ACTIVITIES;}
+function scopeLeaves(){const o=[];scopeActs().forEach(a=>{(a.subs&&a.subs.length?a.subs.map(s=>s.id):[a.id]).forEach(id=>o.push(id));});return o;}
+function renderPlanBoxes(){
+  const box=document.getElementById('planBoxes');box.innerHTML='';
+  SECTIONS.forEach(sec=>{
+    const acts=ACTIVITIES.filter(a=>a.section===sec.code);
+    const t=wAvg(acts,curM,false), v=wAvg(acts,curM,true);
+    let cls,txt;
+    if(v==null){cls='b';txt='รอรายงานผล';}
+    else{const dd=v-t; if(dd>=0){cls='g';txt='ตามแผน';} else if(dd>-10){cls='a';txt='ล่าช้าเล็กน้อย';} else {cls='r';txt='ล่าช้า';}}
+    const colr=cls==='g'?'var(--green)':cls==='a'?'var(--amber)':cls==='r'?'var(--red)':'var(--blue)';
+    const active=selPlan===sec.code, dim=selPlan&&!active;
+    const nsub=acts.reduce((x,a)=>x+(a.subs?a.subs.length:0),0);
+    const d=document.createElement('div');
+    d.className='planbox'+(active?' active':'')+(dim?' dim':'');
+    d.style.setProperty('--accent',colr);
+    d.innerHTML=`<div class="pbtag">แผนหลักที่ ${sec.code.replace('.','')}</div>
+      <div class="pbname">${sec.name.replace(/^\s*\d+\.\s*/,'')}</div>
+      <div class="pbnum"><b>${fmt(v)}</b><small>%</small><small>/ เป้า ${fmt(t)}%</small><span class="chip ${cls}">${txt}</span></div>
+      <div class="track"><div class="fill" style="width:${Math.min(v||0,100)}%;background:${colr}"></div><div class="tmark" style="left:${Math.min(t||0,100)}%"></div></div>
+      <div class="pbmeta"><span>${acts.length} กิจกรรม · ${nsub||acts.length} ย่อย</span><span>${active?'● กำลังดูแผนนี้':'คลิกเพื่อดูเฉพาะแผนนี้'}</span></div>`;
+    d.onclick=()=>{selPlan=(selPlan===sec.code)?null:sec.code; openSecs.clear(); if(selPlan)openSecs.add(selPlan); renderAll();};
+    box.appendChild(d);
+  });
+  const hint=document.getElementById('planHint');
+  hint.innerHTML=selPlan
+    ? `กำลังกรองเฉพาะ <b>${SECNAME[selPlan]}</b> — <a onclick="selPlan=null;openSecs.clear();renderAll()">ดูทุกแผน</a>`
+    : 'เลือกแผนหลักได้ที่กล่องด้านบน (คลิกเพื่อดูเฉพาะแผนนั้น · คลิกซ้ำเพื่อกลับมาดูทุกแผน)';
+}
 
 /* ============ KPI ============ */
 function renderKPIs(){
-  const t=overall(ACTIVITIES,curM,false), v=overall(ACTIVITIES,curM,true);
+  const SA=scopeActs(), SL=scopeLeaves();
+  const t=overall(SA,curM,false), v=overall(SA,curM,true);
   const d=v==null?null:v-t;
   let g=0,a=0,r=0,n=0,wd=0,wg=0,wn=0;
-  ACTIVITIES.forEach(x=>{const s=status(x,curM); if(s.cls==='g')g++;else if(s.cls==='a')a++;else if(s.cls==='r')r++;else n++;
-    const w=workStatus(x.id,curM); if(w===DONE)wd++;else if(w===DOING)wg++;else wn++;});
+  SA.forEach(x=>{const s=status(x,curM); if(s.cls==='g')g++;else if(s.cls==='a')a++;else if(s.cls==='r')r++;else n++;});
+  SL.forEach(id=>{const w=lastInfo(id,curM,'st'); if(w===DONE)wd++;else if(w===DOING)wg++;else wn++;});
   const dCls=d==null?'':(d>=0?'good':(d>-5?'warn':'bad')); const dTxt=d==null?'–':((d>=0?'+':'')+fmt(d));
   document.getElementById('kpis').innerHTML=`
    <div class="kpi" style="--accent:var(--navy)"><div class="lbl">เป้าหมายสะสม ณ ${MONTHS[curM]} ${YEAR_BE}</div>
@@ -290,11 +351,11 @@ function renderKPIs(){
      <div class="val">${fmt(v)}<small> %</small></div><div class="sub">${v==null?'ยังไม่มีข้อมูลผลงานจริง':'จากรายงานผลการดำเนินงาน'}</div></div>
    <div class="kpi ${dCls}" style="--accent:${d==null?'var(--muted)':d>=0?'var(--green)':'var(--red)'}"><div class="lbl">ผลต่าง (ผลงาน − เป้าหมาย)</div>
      <div class="val">${dTxt}<small>${d==null?'':' จุด'}</small></div><div class="sub">${d==null?'รอข้อมูลผลงาน':d>=0?'เป็นไปตามแผน':'ต่ำกว่าเป้าหมาย'}</div></div>
-   <div class="kpi" style="--accent:var(--green)"><div class="lbl">สถานะเทียบแผน (${ACTIVITIES.length} กิจกรรม)</div>
+   <div class="kpi" style="--accent:var(--green)"><div class="lbl">สถานะเทียบแผน (${SA.length} กิจกรรม)</div>
      <div class="val" style="font-size:1.2rem;display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
        <span class="chip g">✓ ${g}</span><span class="chip a">! ${a}</span><span class="chip r">✕ ${r}</span><span class="chip n">○ ${n}</span></div>
      <div class="sub" style="margin-top:6px">ตามแผน · ล่าช้าเล็กน้อย · ล่าช้า · ยังไม่ถึงกำหนด/รอผล</div></div>
-   <div class="kpi" style="--accent:var(--orange)"><div class="lbl">สถานะงาน (รายงานโดยผู้รับผิดชอบ)</div>
+   <div class="kpi" style="--accent:var(--orange)"><div class="lbl">สถานะงานย่อย (${SL.length} รายการ)</div>
      <div class="val" style="font-size:1.2rem;display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
        <span class="chip g">✓ ${wd}</span><span class="chip b">⟳ ${wg}</span><span class="chip n">○ ${wn}</span></div>
      <div class="sub" style="margin-top:6px">เสร็จสิ้น · อยู่ระหว่างดำเนินการ · ยังไม่ดำเนินการ/ไม่ระบุ</div></div>`;
@@ -304,14 +365,15 @@ function renderKPIs(){
 const F={family:'Sarabun'};
 function wAvg(list,m,useActual){ // ค่าเฉลี่ยถ่วงน้ำหนักภายในกลุ่ม (0-100)
   let s=0,w=0,has=false;
-  for(const a of list){const v=useActual?actualAt(a.id,m):planAt(a,m); if(useActual&&v==null)continue; has=true; s+=a.weight*(v??0); w+=a.weight;}
+  for(const a of list){const v=useActual?actAct(a,m):planAt(a,m); if(useActual&&v==null)continue; has=true; s+=a.weight*(v??0); w+=a.weight;}
   if(useActual&&!has)return null; return w>0?s/w:0;
 }
 function renderScurve(){
-  const plan=MONTHS.map((_,i)=>Math.round(wAvg(ACTIVITIES,i,false)*100)/100);
+  const SA=scopeActs();
+  const plan=MONTHS.map((_,i)=>Math.round(wAvg(SA,i,false)*100)/100);
   const act=MONTHS.map((_,i)=>{if(!hasActual)return null;
-    let any=false;for(const a of ACTIVITIES){const rec=ACTUAL[a.id]||{};for(let j=0;j<=i;j++)if(rec[j]&&rec[j].v!=null)any=true;}
-    if(!any)return null;const v=wAvg(ACTIVITIES,i,true);return v==null?null:Math.round(v*100)/100;});
+    let any=SA.some(a=>actHasData(a,i));
+    if(!any)return null;const v=wAvg(SA,i,true);return v==null?null:Math.round(v*100)/100;});
   if(scurve)scurve.destroy();
   scurve=new Chart(document.getElementById('scurve'),{type:'line',
    data:{labels:MONTHS,datasets:[
@@ -336,32 +398,26 @@ function renderSecBar(){
 }
 /* ============ Gantt + Table ============ */
 function ganttHTML(a){
-  let h=`<div class="gtitle">กิจกรรมย่อยและช่วงเวลาดำเนินการตามแผน · เดือนที่เลือกถูกเน้นกรอบส้ม</div><table class="gantt"><tr><th class="gname"></th>`;
+  const subs=(a.subs&&a.subs.length)?a.subs:[{id:a.id,code:'',name:'(รายงานระดับกิจกรรม)',bits:'000000000000'}];
+  let h=`<div class="gtitle">กิจกรรมย่อย ${subs.length} รายการ · แถบน้ำเงิน = ช่วงทำตามแผน · เดือนเลือก = กรอบส้ม · เลข % / จุดส้ม ● = ผลจริง (คลิกดูรายละเอียด)</div><table class="gantt"><tr><th class="gname"></th>`;
   MONTHS.forEach((m,i)=>h+=`<th${i===curM?' style="color:var(--navy);font-weight:700"':''}>${m}</th>`);
-  h+='</tr>';
-  const rec=ACTUAL[a.id]||{};
-  if(Object.keys(rec).length){
-    h+=`<tr style="background:var(--orange-soft)"><td class="gname" style="font-weight:700">ผลการดำเนินงานรายเดือน (% สะสม)</td>`;
-    for(let i=0;i<12;i++){const e=rec[i];
-      if(e&&(e.v!=null||e.d)) h+=`<td><div class="mcell mv ${e.d?'hasd':''}" data-id="${a.id}" data-m="${i}" title="คลิกดูรายละเอียด">${e.v!=null?fmt(e.v):'•'}</div></td>`;
-      else h+='<td></td>';}
-    h+='</tr>';
-  }
-  for(const tk of a.tasks){
-    h+=`<tr><td class="gname">${tk.name}</td>`;
-    for(let i=0;i<12;i++)h+=`<td><div class="gcell ${tk.bits[i]==='1'?'on':''} ${i===curM?'now':''}"></div></td>`;
-    h+='</tr>';
+  h+='<th style="width:128px">สถานะงาน</th></tr>';
+  for(const s of subs){
+    const rec=ACTUAL[s.id]||{};
+    h+=`<tr><td class="gname">${s.code?'<b>'+s.code+'</b> ':''}${s.name}</td>`;
+    for(let i=0;i<12;i++){const e=rec[i],planned=s.bits&&s.bits[i]==='1';
+      if(e&&(e.v!=null||e.d)) h+=`<td><div class="mcell mv ${e.d?'hasd':''}" data-id="${s.id}" data-m="${i}" title="คลิกดูรายละเอียด">${e.v!=null?fmt(e.v):'•'}</div></td>`;
+      else h+=`<td><div class="gcell ${planned?'on':''} ${i===curM?'now':''}"></div></td>`;}
+    h+=`<td style="text-align:center">${wsChip(lastInfo(s.id,curM,'st')||'')}</td></tr>`;
   }
   h+='</table>';
-  const note=lastInfo(a.id,curM,'d'), issue=lastInfo(a.id,curM,'issue');
-  if(note)h+=`<div class="note"><b>ความคืบหน้า (${MONTHS[curM]}):</b> ${note}</div>`;
-  if(issue)h+=`<div class="issue"><b>ปัญหา/แนวทางแก้ไข:</b> ${issue}</div>`;
   return `<div class="subwrap">${h}</div>`;
 }
 const openSecs=new Set();   // แผนหลักที่ "ขยาย" อยู่ (default ว่าง = หุบทั้งหมด)
 function renderTable(){
   const tb=document.getElementById('actbody'); tb.innerHTML='';
-  SECTIONS.forEach(sec=>{
+  document.getElementById('actCount').textContent=scopeActs().length;
+  SECTIONS.filter(sec=>!selPlan||sec.code===selPlan).forEach(sec=>{
     const items=ACTIVITIES.filter(a=>a.section===sec.code);
     const t=wAvg(items,curM,false), v=wAvg(items,curM,true);
     const expanded=openSecs.has(sec.code);
@@ -371,15 +427,15 @@ function renderTable(){
       <span class="seckpi">เป้าหมาย ${fmt(t)}% · ผลงาน <b>${v==null?'–':fmt(v)+'%'}</b></span></td>`;
     const childRows=[];
     items.forEach(a=>{
-      const tp=planAt(a,curM),va=actualAt(a.id,curM),s=status(a,curM),pct=va??0;
+      const tp=planAt(a,curM),va=actAct(a,curM),s=status(a,curM),pct=va??0;const nsub=(a.subs&&a.subs.length)?a.subs.length:0;
       const tr=document.createElement('tr');tr.className='main';tr.style.display=expanded?'':'none';
       tr.innerHTML=`
-        <td class="name"><div class="nm"><span class="caret">▶</span><div><b>${a.code}</b> ${a.name}${a.output?`<div class="outp">ตัวชี้วัด: ${a.output}</div>`:''}</div></div></td>
+        <td class="name"><div class="nm"><span class="caret">▶</span><div><b>${a.code}</b> ${a.name} ${nsub?`<span style="font-size:.68rem;color:var(--blue);background:var(--blue-bg);border:1px solid #b2ddff;border-radius:10px;padding:1px 7px;white-space:nowrap">${nsub} ย่อย</span>`:''}${a.output?`<div class="outp">ตัวชี้วัด: ${a.output}</div>`:''}</div></div></td>
         <td><span class="wchip">${fmt(a.weight)}%</span></td>
         <td>${fmt(tp)}%</td><td>${va==null?'–':fmt(va)+'%'}</td>
         <td><div class="pcell"><div class="pbar"><i style="width:${Math.min(pct,100)}%;background:${s.cls==='r'?'var(--red)':s.cls==='a'?'var(--amber)':'var(--blue)'}"></i></div><span>${va==null?'':fmt(va)+'%'}</span></div></td>
         <td><span class="chip ${s.cls}">${s.txt}</span></td>
-        <td>${wsChip(workStatus(a.id,curM))}</td>`;
+        <td>${wsChip(wsAct(a,curM))}</td>`;
       const trs=document.createElement('tr');trs.className='sub';trs.style.display='none';
       trs.innerHTML=`<td colspan="7">${ganttHTML(a)}</td>`;
       tr.addEventListener('click',()=>{const o=trs.style.display!=='none';trs.style.display=o?'none':'';tr.classList.toggle('open',!o);});
@@ -400,7 +456,7 @@ function setAllSecs(open){
   if(open)SECTIONS.forEach(s=>openSecs.add(s.code)); else openSecs.clear();
   renderTable();
 }
-function renderAll(){renderKPIs();renderScurve();renderSecBar();renderTable();}
+function renderAll(){renderPlanBoxes();renderKPIs();renderScurve();renderSecBar();renderTable();}
 
 /* ============ popup ============ */
 const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');
@@ -409,9 +465,9 @@ function bindModal(){
   bg.addEventListener('click',e=>{if(e.target===bg)bg.style.display='none';});
   document.addEventListener('keydown',e=>{if(e.key==='Escape')bg.style.display='none';});
   document.addEventListener('click',e=>{const t=e.target.closest('.mcell');if(!t)return;e.stopPropagation();
-    const m=parseInt(t.dataset.m), id=t.dataset.id, a=ACTIVITIES.find(x=>x.id===id);
+    const m=parseInt(t.dataset.m), id=t.dataset.id, lf=LEAF[id]||{};
     const e2=(ACTUAL[id]||{})[m]||{};
-    document.getElementById('mdTitle').textContent=`${a?a.code+' '+a.name:''}`;
+    document.getElementById('mdTitle').textContent=`${lf.pc?lf.pc+' › ':''}${lf.name||id}`;
     document.getElementById('mdMonth').textContent=`เดือน ${MONTHS[m]} ${YEAR_BE}`;
     document.getElementById('mdBody').innerHTML=(e2.v!=null?`<div class="mpct">ผลงานสะสม ${fmt(e2.v)}%</div><br>`:'')+(e2.d?esc(e2.d):'<i>ไม่มีรายละเอียดเพิ่มเติม</i>')+(e2.issue?`<div class="issue" style="margin-top:10px"><b>ปัญหา:</b> ${esc(e2.issue)}</div>`:'');
     document.getElementById('mdMeta').textContent=[e2.st?'สถานะงาน: '+e2.st:'',e2.reporter?'รายงานโดย '+e2.reporter:'',e2.date||''].filter(Boolean).join(' · ');
@@ -424,7 +480,7 @@ function init(){
   const sel=document.getElementById('monthSel');
   MONTHS.forEach((m,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${m} ${YEAR_BE}`;sel.appendChild(o);});
   let def=null;
-  for(let i=11;i>=0;i--){for(const a of ACTIVITIES){if(ACTUAL[a.id]&&ACTUAL[a.id][i]&&ACTUAL[a.id][i].v!=null){def=i;break;}}if(def!=null)break;}
+  for(let i=11;i>=0;i--){if(LEAVES.some(id=>ACTUAL[id]&&ACTUAL[id][i]&&ACTUAL[id][i].v!=null)){def=i;break;}}
   if(def==null){const now=new Date();def=(now.getFullYear()===YEAR_BE-543)?now.getMonth():11;}
   curM=def;sel.value=def;
   sel.addEventListener('change',e=>{curM=parseInt(e.target.value);renderAll();});
