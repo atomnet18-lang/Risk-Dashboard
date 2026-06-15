@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard แผนปฏิบัติการบริหารความเสี่ยง 2569 | RM & IC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --navy:#16275c; --navy2:#1e3a8a; --orange:#b07b2e; --orange-soft:#f7f1e2;
+  --bg:#f3f4f6; --card:#ffffff; --line:#e5e7eb; --text:#1f2937; --muted:#64748b;
+  --green:#067647; --green-bg:#ecfdf3; --amber:#b54708; --amber-bg:#fffaeb;
+  --red:#b42318; --red-bg:#fef3f2; --blue:#175cd3; --blue-bg:#eff8ff;
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);font-size:15px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1320px;margin:0 auto;padding:0 24px 56px}
+
+/* Header */
+header{background:linear-gradient(135deg,#0f1f44 0%,var(--navy) 55%,var(--navy2) 100%);color:#fff;padding:30px 0 26px;border-bottom:3px solid var(--orange);box-shadow:0 2px 10px rgba(16,24,40,.18)}
+.hrow{max-width:1320px;margin:0 auto;padding:0 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+.htitle h1{font-size:1.38rem;font-weight:700;letter-spacing:.3px}
+.htitle p{font-size:.9rem;opacity:.74;margin-top:4px;font-weight:300;letter-spacing:.4px}
+.dept{font-size:.95rem;font-weight:600;color:#f0c987;letter-spacing:.6px;margin-bottom:3px}
+.badge-iso{display:inline-block;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.28);color:#dbe3f5;font-size:.72rem;padding:3px 14px;border-radius:4px;margin-top:10px;font-weight:600;letter-spacing:1.2px}
+.hbrand{display:flex;align-items:center;gap:18px}
+.hlogo{width:68px;height:68px;border-radius:50%;background:#fff;padding:5px;box-shadow:0 2px 10px rgba(0,0,0,.28);flex:none;object-fit:contain}
+.hctrl label{font-size:.8rem;opacity:.75;letter-spacing:.3px}
+select#monthSel{font-family:'Sarabun';font-size:.92rem;font-weight:600;padding:9px 16px;border-radius:6px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.97);color:var(--navy);cursor:pointer;box-shadow:var(--shadow)}
+.asof{font-size:.74rem;opacity:.65;text-align:right;margin-top:8px;letter-spacing:.2px}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:16px;margin:26px 0}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.kpi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent,var(--navy))}
+.kpi .lbl{font-size:.78rem;color:var(--muted);font-weight:600}
+.kpi .val{font-size:2rem;font-weight:700;color:var(--navy);margin-top:6px;line-height:1.1}
+.kpi .val small{font-size:.9rem;font-weight:600;color:var(--muted)}
+.kpi .sub{font-size:.76rem;color:var(--muted);margin-top:5px}
+.kpi.good .val{color:var(--green)} .kpi.bad .val{color:var(--red)} .kpi.warn .val{color:var(--amber)}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:22px 24px;margin-bottom:20px;box-shadow:var(--shadow)}
+.card h2{font-size:1rem;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:9px;margin-bottom:4px}
+.card h2::before{content:'';width:4px;height:16px;border-radius:2px;background:var(--navy2);display:inline-block}
+.card .desc{font-size:.78rem;color:var(--muted);margin-bottom:14px}
+.grid2{display:grid;grid-template-columns:1.12fr .88fr;gap:20px}
+@media(max-width:980px){.grid2{grid-template-columns:1fr}}
+.chartbox{position:relative;height:330px}
+.chartbox.tall{height:620px}
+
+/* Table */
+table.acts{width:100%;border-collapse:collapse;font-size:.88rem}
+table.acts th{background:var(--navy);color:#fff;font-weight:600;padding:11px 12px;text-align:center;font-size:.78rem;position:sticky;top:0;letter-spacing:.3px}
+table.acts th:first-child{border-radius:8px 0 0 0;text-align:left}
+table.acts th:last-child{border-radius:0 8px 0 0}
+table.acts td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:middle;text-align:center}
+table.acts td.name{text-align:left;font-weight:500;max-width:430px}
+tr.secrow{cursor:pointer}
+tr.secrow td{background:linear-gradient(90deg,var(--orange-soft),#fff);font-weight:700;color:var(--navy);text-align:left;font-size:.9rem;letter-spacing:.2px;border-left:4px solid var(--orange)}
+tr.secrow:hover td{background:linear-gradient(90deg,#f0e6cf,#fff)}
+.seccaret{display:inline-block;width:16px;color:var(--orange);font-size:.7rem;transition:transform .2s;margin-right:4px}
+tr.secrow.open .seccaret{transform:rotate(90deg)}
+.seccount{font-weight:500;color:var(--muted);font-size:.78rem;margin-left:10px}
+.seckpi{float:right;font-weight:600;color:var(--navy);font-size:.8rem;background:#fff;border:1px solid var(--line);border-radius:14px;padding:2px 12px}
+.seckpi b{color:var(--blue)}
+.btn-sm{font-family:'Sarabun';font-size:.76rem;font-weight:600;background:#fff;color:var(--navy);border:1px solid var(--line);border-radius:6px;padding:6px 14px;cursor:pointer;margin-left:8px}
+.btn-sm:hover{background:var(--blue-bg);border-color:var(--blue)}
+table.acts tr.main{cursor:pointer;transition:background .15s}
+table.acts tr.main:hover{background:#eef3fb}
+.caret{display:inline-block;width:18px;height:18px;line-height:18px;text-align:center;border-radius:4px;background:var(--blue-bg);color:var(--blue);font-size:.68rem;margin-right:9px;transition:transform .2s;flex:none}
+tr.open .caret{transform:rotate(90deg)}
+.nm{display:flex;align-items:flex-start}
+.outp{font-size:.73rem;color:var(--muted);margin-top:3px;font-weight:400}
+.pbar{background:#eef1f5;border-radius:20px;height:8px;width:110px;margin:0 auto;overflow:hidden}
+.pbar i{display:block;height:100%;border-radius:20px;background:var(--blue)}
+.pcell{display:flex;flex-direction:column;align-items:center;gap:4px}
+.pcell span{font-size:.76rem;font-weight:600;color:var(--muted)}
+
+/* Badges */
+.chip{display:inline-block;padding:3px 12px;border-radius:16px;font-size:.72rem;font-weight:600;white-space:nowrap;border:1px solid transparent}
+.chip.g{background:var(--green-bg);color:var(--green);border-color:#abefc6}
+.chip.a{background:var(--amber-bg);color:var(--amber);border-color:#fedf89}
+.chip.r{background:var(--red-bg);color:var(--red);border-color:#fecdca}
+.chip.n{background:#f2f4f7;color:#475467;border-color:#e4e7ec}
+.chip.b{background:var(--blue-bg);color:var(--blue);border-color:#b2ddff}
+.wchip{background:#f2f4f7;color:var(--navy);font-weight:700;border-radius:6px;padding:3px 9px;font-size:.78rem;border:1px solid var(--line)}
+
+/* Sub rows / Gantt */
+tr.sub td{background:#fbfcfe;padding:0}
+.subwrap{padding:14px 18px 18px 46px}
+.gtitle{font-size:.76rem;font-weight:700;color:var(--muted);margin-bottom:10px}
+table.gantt{width:100%;border-collapse:collapse;font-size:.8rem}
+table.gantt th{font-size:.67rem;color:var(--muted);font-weight:600;padding:4px 2px;text-align:center;background:transparent;width:34px}
+table.gantt th.gname{text-align:left;width:auto}
+table.gantt td{padding:5px 2px;border-bottom:1px solid #eef1f5}
+table.gantt tr:nth-child(even) td{background:#f8fafc}
+table.gantt td.gname{text-align:left;color:var(--text);padding-right:10px}
+.gcell{height:13px;border-radius:3px}
+.gcell.on{background:linear-gradient(180deg,#3b5fa3,#27457f)}
+.gcell.now{outline:2px solid var(--orange);outline-offset:-1px}
+.note{margin-top:12px;font-size:.8rem;background:var(--blue-bg);border-left:3px solid var(--blue);padding:9px 13px;border-radius:0 6px 6px 0;color:#1d4f9c}
+.issue{margin-top:8px;font-size:.8rem;background:var(--amber-bg);border-left:3px solid var(--amber);padding:9px 13px;border-radius:0 6px 6px 0;color:#93550c}
+
+/* legend + footer */
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:.76rem;color:var(--muted);margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+footer{font-size:.76rem;color:var(--muted);text-align:center;margin-top:30px;line-height:1.8}
+@media print{.hctrl{display:none}body{background:#fff}.card{break-inside:avoid;box-shadow:none}}
+
+/* popup */
+.modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;z-index:90;padding:20px;backdrop-filter:blur(2px)}
+.modal{background:#fff;border-radius:12px;max-width:580px;width:100%;padding:24px 26px;box-shadow:0 20px 50px rgba(16,24,40,.3);border-top:4px solid var(--navy2)}
+.md-title{font-weight:700;color:var(--navy);font-size:1rem;line-height:1.5}
+.md-month{font-size:.8rem;color:var(--navy2);font-weight:700;margin:5px 0 12px}
+.md-body{font-size:.9rem;line-height:1.75;max-height:52vh;overflow:auto;color:var(--text)}
+.mpct{display:inline-block;background:var(--blue-bg);color:var(--blue);font-weight:700;border-radius:6px;padding:3px 12px;margin-bottom:9px;border:1px solid #b2ddff}
+.md-meta{font-size:.76rem;color:var(--muted);margin-top:12px;border-top:1px solid var(--line);padding-top:9px}
+.md-close{margin-top:18px;font-family:'Sarabun';background:var(--navy);color:#fff;border:none;border-radius:6px;padding:9px 26px;cursor:pointer;font-size:.85rem}
+.md-close:hover{background:var(--navy2)}
+.mcell{cursor:pointer}
+.mv{position:relative;background:var(--blue-bg);color:var(--blue);font-weight:700;border-radius:5px;padding:2px 0;font-size:.74rem;text-align:center;border:1px solid #d3e7fd}
+.mv:hover{background:#dcebfc}
+.mv.hasd::after{content:'';position:absolute;top:-3px;right:-3px;width:8px;height:8px;border-radius:50%;background:var(--orange);border:1.5px solid #fff}
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow">
+    <div class="hbrand">
+      <img src="logo.png" class="hlogo" alt="โลโก้องค์กร" onerror="this.style.display='none'">
+      <div class="htitle">
+        <div class="dept">ฝ่ายบริหารความเสี่ยงองค์กร</div>
+        <h1>Dashboard แผนปฏิบัติการบริหารความเสี่ยง</h1>
+        <p>ปีงบประมาณ <span id="yrTxt"></span> · ระบบบริหารความเสี่ยงและการควบคุมภายใน (RM &amp; IC)</p>
+        <span class="badge-iso">RM &amp; IC · GRC</span>
+      </div>
+    </div>
+    <div class="hctrl">
+      <div>
+        <label for="monthSel">ข้อมูล ณ เดือน</label><br>
+        <select id="monthSel"></select>
+        <div class="asof" id="srcInfo">แหล่งข้อมูล: แผนปฏิบัติการบริหารความเสี่ยง</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid2">
+    <div class="card">
+      <h2>ความก้าวหน้าสะสมรายเดือน (S-Curve)</h2>
+      <div class="desc">เป้าหมายสะสมถ่วงน้ำหนักตามแผน เทียบกับผลการดำเนินงานจริง (ร้อยละ)</div>
+      <div class="chartbox"><canvas id="scurve"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>ความก้าวหน้าตามแผนหลัก</h2>
+      <div class="desc" id="secDesc">เป้าหมาย vs ผลงาน ของแต่ละแผนหลัก (ถ่วงน้ำหนัก)</div>
+      <div class="chartbox"><canvas id="secbar"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>รายละเอียดกิจกรรม/มาตรการตามแผนปฏิบัติการ (<span id="actCount"></span> รายการ)</h2>
+    <div class="desc" style="display:flex;align-items:center;flex-wrap:wrap;gap:4px">
+      <span>คลิกแถว <b>แผนหลัก</b> เพื่อหุบ/ขยาย · คลิกแถวกิจกรรมเพื่อดู Gantt · ช่องผลงานจุดส้ม ● คลิกดูรายละเอียดรายเดือน</span>
+      <span style="margin-left:auto">
+        <button class="btn-sm" id="expandAll">▼ ขยายทั้งหมด</button>
+        <button class="btn-sm" id="collapseAll">▲ หุบทั้งหมด</button>
+      </span>
+    </div>
+    <div style="overflow-x:auto">
+    <table class="acts">
+      <thead><tr>
+        <th>กิจกรรม / ผลผลิต</th><th>ถ่วงน้ำหนัก</th><th>เป้าหมาย<br>(%)</th>
+        <th>ผลงาน<br>(%)</th><th>ความก้าวหน้า</th><th>สถานะเทียบแผน</th><th>สถานะงาน</th>
+      </tr></thead>
+      <tbody id="actbody"></tbody>
+    </table>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--green-bg);border:1px solid var(--green)"></i>ตามแผน / เร็วกว่าแผน</span>
+      <span><i style="background:var(--amber-bg);border:1px solid var(--amber)"></i>ล่าช้าเล็กน้อย (&lt; 10 จุด)</span>
+      <span><i style="background:var(--red-bg);border:1px solid var(--red)"></i>ล่าช้า (≥ 10 จุด)</span>
+      <span><i style="background:#eef0f4"></i>ยังไม่ถึงกำหนด / รอรายงานผล</span>
+      <span><i style="background:linear-gradient(180deg,#3b5fa3,#27457f)"></i>ช่วงดำเนินการตามแผน</span>
+    </div>
+  </div>
+
+  <footer>
+    แผนปฏิบัติการบริหารความเสี่ยง และการบริหารความต่อเนื่องทางธุรกิจ ปี <span id="yrF"></span> · เป้าหมายรวมทั้งปี = ร้อยละ 100 (ถ่วงน้ำหนัก <span id="nF"></span> กิจกรรม)<br>
+    ผลงานจริงอัปเดตจากไฟล์ <code>data/rm_actual.csv</code> (Microsoft Lists → GitHub) · จัดทำเพื่อการติดตามและสื่อสารภายในองค์กร
+  </footer>
+</div>
+
+<div class="modal-bg" id="modalBg"><div class="modal">
+  <div id="mdTitle" class="md-title"></div>
+  <div id="mdMonth" class="md-month"></div>
+  <div id="mdBody" class="md-body"></div>
+  <div id="mdMeta" class="md-meta"></div>
+  <button class="md-close" onclick="document.getElementById('modalBg').style.display='none'">ปิด</button>
+</div></div>
+
+<script>
+/* ============ ข้อมูลแผน (ฝังจาก Excel) ============ */
+const RAW = /*__RAW__*/;
+const EMBED_ACTUAL = /*__EMBED_ACTUAL__*/;
+const MONTHS = RAW.months, YEAR_BE = RAW.year_be;
+const ACTIVITIES = RAW.activities;
+const SECTIONS = RAW.sections;
+const SECNAME={}; SECTIONS.forEach(s=>SECNAME[s.code]=s.name);
+document.getElementById('yrTxt').textContent=RAW.year;
+document.getElementById('yrF').textContent=RAW.year;
+document.getElementById('nF').textContent=ACTIVITIES.length;
+document.getElementById('actCount').textContent=ACTIVITIES.length;
+
+/* ============ ผลงานจริง ============ */
+let ACTUAL={};   // ACTUAL[id][m]={v,d,st,issue,reporter,date}
+const THM={'ม.ค.':1,'ก.พ.':2,'มี.ค.':3,'เม.ย.':4,'พ.ค.':5,'มิ.ย.':6,'ก.ค.':7,'ส.ค.':8,'ก.ย.':9,'ต.ค.':10,'พ.ย.':11,'ธ.ค.':12};
+function parseCSV(t){const rows=[];let row=[],cur='',q=false;
+  for(let i=0;i<t.length;i++){const ch=t[i];
+    if(q){if(ch==='"'){if(t[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=ch;}
+    else if(ch==='"')q=true;
+    else if(ch===','){row.push(cur);cur='';}
+    else if(ch==='\n'||ch==='\r'){if(cur!==''||row.length){row.push(cur);rows.push(row);row=[];cur='';}}
+    else cur+=ch;}
+  if(cur!==''||row.length){row.push(cur);rows.push(row);}return rows;}
+function loadActualRows(rows){
+  if(!rows||rows.length<2)return false;
+  const h=rows[0].map(x=>(x||'').replace(/^﻿/,'').trim().toLowerCase());
+  const idx=ns=>h.findIndex(c=>ns.some(n=>c.includes(n)));
+  const iId=idx(['รหัสกิจกรรม','รหัส','activityid','aid','id']),iM=idx(['เดือน','month']),iV=idx(['percent','ผลงาน','actual','จริง']),
+        iSt=idx(['สถานะ','status']),iD=idx(['รายละเอียด','note','detail']),
+        iIss=idx(['ปัญหา','issue']),iR=idx(['ผู้รายงาน','reporter']),iDt=idx(['วันที่','date']);
+  if(iId<0||iM<0)return false; let n=0; ACTUAL={};
+  for(let r=1;r<rows.length;r++){const c=rows[r]; const id=(c[iId]||'').trim(); if(!id)continue;
+    let m=(c[iM]||'').trim(); m=THM[m]||parseInt(m); if(!m||m<1||m>12)continue; const mi=m-1;
+    let v=iV>=0?(c[iV]??'').toString().replace('%','').trim():''; v=(v===''?null:parseFloat(v));
+    if(v!=null&&v>0&&v<=1&&!Number.isInteger(v))v*=100;
+    ACTUAL[id]=ACTUAL[id]||{};
+    ACTUAL[id][mi]={v,d:iD>=0?(c[iD]||'').trim():'',st:iSt>=0?(c[iSt]||'').trim():'',
+      issue:iIss>=0?(c[iIss]||'').trim():'',reporter:iR>=0?(c[iR]||'').trim():'',date:iDt>=0?(c[iDt]||'').trim():''};
+    n++;
+  }
+  return n>0;
+}
+
+/* ============ คำนวณ ============ */
+function planAt(a,m){let v=0;for(let i=0;i<=m;i++)if(a.plan[i]!=null)v=a.plan[i];return v;}
+function actualAt(id,m){let r=null;const rec=ACTUAL[id]||{};for(let i=0;i<=m;i++)if(rec[i]&&rec[i].v!=null)r=rec[i].v;return r;}
+function lastInfo(id,m,key){let r=null;const rec=ACTUAL[id]||{};for(let i=0;i<=m;i++)if(rec[i]&&rec[i][key])r=rec[i][key];return r;}
+function overall(list,m,useActual){let s=0,wsum=0,has=false;
+  for(const a of list){const v=useActual?actualAt(a.id,m):planAt(a,m); wsum+=a.weight;
+    if(useActual&&v==null)continue; has=true; s+=a.weight/100*(v??0);}
+  if(useActual&&!has)return null;
+  // normalize ถ้า subset ไม่ครบ 100
+  return wsum>0? s*(100/ (list===ACTIVITIES?100:wsum)) : s;
+}
+function status(a,m){const t=planAt(a,m),v=actualAt(a.id,m);
+  if(t===0)return{cls:'n',txt:'ยังไม่ถึงกำหนด'};
+  if(v==null)return{cls:'b',txt:'รอรายงานผล'};
+  const d=v-t; if(d>=0)return{cls:'g',txt:d>0?'เร็วกว่าแผน':'ตามแผน'};
+  if(d>-10)return{cls:'a',txt:'ล่าช้าเล็กน้อย'}; return{cls:'r',txt:'ล่าช้า'};}
+const fmt=v=>v==null?'–':(Math.round(v*100)/100).toLocaleString('th-TH');
+const DONE='เสร็จสิ้น',DOING='อยู่ระหว่างดำเนินการ',NOT='ยังไม่ดำเนินการ';
+function workStatus(id,m){return lastInfo(id,m,'st')||'';}
+function wsChip(s){if(s===DONE)return `<span class="chip g">✓ ${DONE}</span>`;
+  if(s===DOING)return `<span class="chip b">⟳ ${DOING}</span>`;
+  if(s===NOT)return `<span class="chip n">○ ${NOT}</span>`;return '<span class="chip n">–</span>';}
+
+let curM=5, scurve=null, secbar=null, hasActual=false;
+
+/* ============ KPI ============ */
+function renderKPIs(){
+  const t=overall(ACTIVITIES,curM,false), v=overall(ACTIVITIES,curM,true);
+  const d=v==null?null:v-t;
+  let g=0,a=0,r=0,n=0,wd=0,wg=0,wn=0;
+  ACTIVITIES.forEach(x=>{const s=status(x,curM); if(s.cls==='g')g++;else if(s.cls==='a')a++;else if(s.cls==='r')r++;else n++;
+    const w=workStatus(x.id,curM); if(w===DONE)wd++;else if(w===DOING)wg++;else wn++;});
+  const dCls=d==null?'':(d>=0?'good':(d>-5?'warn':'bad')); const dTxt=d==null?'–':((d>=0?'+':'')+fmt(d));
+  document.getElementById('kpis').innerHTML=`
+   <div class="kpi" style="--accent:var(--navy)"><div class="lbl">เป้าหมายสะสม ณ ${MONTHS[curM]} ${YEAR_BE}</div>
+     <div class="val">${fmt(t)}<small> %</small></div><div class="sub">จากเป้าหมายทั้งปี 100%</div></div>
+   <div class="kpi" style="--accent:var(--blue)"><div class="lbl">ผลงานสะสม (ถ่วงน้ำหนัก)</div>
+     <div class="val">${fmt(v)}<small> %</small></div><div class="sub">${v==null?'ยังไม่มีข้อมูลผลงานจริง':'จากรายงานผลการดำเนินงาน'}</div></div>
+   <div class="kpi ${dCls}" style="--accent:${d==null?'var(--muted)':d>=0?'var(--green)':'var(--red)'}"><div class="lbl">ผลต่าง (ผลงาน − เป้าหมาย)</div>
+     <div class="val">${dTxt}<small>${d==null?'':' จุด'}</small></div><div class="sub">${d==null?'รอข้อมูลผลงาน':d>=0?'เป็นไปตามแผน':'ต่ำกว่าเป้าหมาย'}</div></div>
+   <div class="kpi" style="--accent:var(--green)"><div class="lbl">สถานะเทียบแผน (${ACTIVITIES.length} กิจกรรม)</div>
+     <div class="val" style="font-size:1.2rem;display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+       <span class="chip g">✓ ${g}</span><span class="chip a">! ${a}</span><span class="chip r">✕ ${r}</span><span class="chip n">○ ${n}</span></div>
+     <div class="sub" style="margin-top:6px">ตามแผน · ล่าช้าเล็กน้อย · ล่าช้า · ยังไม่ถึงกำหนด/รอผล</div></div>
+   <div class="kpi" style="--accent:var(--orange)"><div class="lbl">สถานะงาน (รายงานโดยผู้รับผิดชอบ)</div>
+     <div class="val" style="font-size:1.2rem;display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+       <span class="chip g">✓ ${wd}</span><span class="chip b">⟳ ${wg}</span><span class="chip n">○ ${wn}</span></div>
+     <div class="sub" style="margin-top:6px">เสร็จสิ้น · อยู่ระหว่างดำเนินการ · ยังไม่ดำเนินการ/ไม่ระบุ</div></div>`;
+}
+
+/* ============ Charts ============ */
+const F={family:'Sarabun'};
+function wAvg(list,m,useActual){ // ค่าเฉลี่ยถ่วงน้ำหนักภายในกลุ่ม (0-100)
+  let s=0,w=0,has=false;
+  for(const a of list){const v=useActual?actualAt(a.id,m):planAt(a,m); if(useActual&&v==null)continue; has=true; s+=a.weight*(v??0); w+=a.weight;}
+  if(useActual&&!has)return null; return w>0?s/w:0;
+}
+function renderScurve(){
+  const plan=MONTHS.map((_,i)=>Math.round(wAvg(ACTIVITIES,i,false)*100)/100);
+  const act=MONTHS.map((_,i)=>{if(!hasActual)return null;
+    let any=false;for(const a of ACTIVITIES){const rec=ACTUAL[a.id]||{};for(let j=0;j<=i;j++)if(rec[j]&&rec[j].v!=null)any=true;}
+    if(!any)return null;const v=wAvg(ACTIVITIES,i,true);return v==null?null:Math.round(v*100)/100;});
+  if(scurve)scurve.destroy();
+  scurve=new Chart(document.getElementById('scurve'),{type:'line',
+   data:{labels:MONTHS,datasets:[
+    {label:'เป้าหมายสะสม (แผน)',data:plan,borderColor:'#9aa7ba',borderDash:[6,4],pointRadius:3,pointBackgroundColor:'#9aa7ba',tension:.3,fill:false},
+    {label:'ผลงานสะสม (จริง)',data:act,borderColor:'#1e56b0',backgroundColor:'rgba(30,86,176,.10)',pointRadius:4,pointBackgroundColor:'#1e56b0',tension:.3,fill:true,spanGaps:false}]},
+   options:{maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{labels:{font:F}},tooltip:{titleFont:F,bodyFont:F,callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y??'–'}%`}}},
+    scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%',font:F},grid:{color:'#eef1f5'}},x:{ticks:{font:F},grid:{display:false}}}}});
+}
+function renderSecBar(){
+  document.getElementById('secDesc').textContent=`เป้าหมาย vs ผลงาน ของแต่ละแผนหลัก ณ ${MONTHS[curM]} ${YEAR_BE} (ถ่วงน้ำหนัก)`;
+  const labels=SECTIONS.map(s=>'แผน '+s.code.replace('.',''));
+  const t=SECTIONS.map(s=>Math.round(wAvg(ACTIVITIES.filter(a=>a.section===s.code),curM,false)*100)/100);
+  const v=SECTIONS.map(s=>{const x=wAvg(ACTIVITIES.filter(a=>a.section===s.code),curM,true);return x==null?null:Math.round(x*100)/100;});
+  if(secbar)secbar.destroy();
+  secbar=new Chart(document.getElementById('secbar'),{type:'bar',
+   data:{labels,datasets:[{label:'เป้าหมาย',data:t,backgroundColor:'#cbd5e1',borderRadius:4},
+    {label:'ผลงาน',data:v,backgroundColor:'#1e56b0',borderRadius:4}]},
+   options:{maintainAspectRatio:false,plugins:{legend:{labels:{font:F}},
+     tooltip:{titleFont:F,bodyFont:F,callbacks:{title:it=>SECNAME[SECTIONS[it[0].dataIndex].code].slice(0,46),label:c=>` ${c.dataset.label}: ${c.parsed.y??'–'}%`}}},
+    scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%',font:F},grid:{color:'#eef1f5'}},x:{ticks:{font:F},grid:{display:false}}}}});
+}
+/* ============ Gantt + Table ============ */
+function ganttHTML(a){
+  let h=`<div class="gtitle">กิจกรรมย่อยและช่วงเวลาดำเนินการตามแผน · เดือนที่เลือกถูกเน้นกรอบส้ม</div><table class="gantt"><tr><th class="gname"></th>`;
+  MONTHS.forEach((m,i)=>h+=`<th${i===curM?' style="color:var(--navy);font-weight:700"':''}>${m}</th>`);
+  h+='</tr>';
+  const rec=ACTUAL[a.id]||{};
+  if(Object.keys(rec).length){
+    h+=`<tr style="background:var(--orange-soft)"><td class="gname" style="font-weight:700">ผลการดำเนินงานรายเดือน (% สะสม)</td>`;
+    for(let i=0;i<12;i++){const e=rec[i];
+      if(e&&(e.v!=null||e.d)) h+=`<td><div class="mcell mv ${e.d?'hasd':''}" data-id="${a.id}" data-m="${i}" title="คลิกดูรายละเอียด">${e.v!=null?fmt(e.v):'•'}</div></td>`;
+      else h+='<td></td>';}
+    h+='</tr>';
+  }
+  for(const tk of a.tasks){
+    h+=`<tr><td class="gname">${tk.name}</td>`;
+    for(let i=0;i<12;i++)h+=`<td><div class="gcell ${tk.bits[i]==='1'?'on':''} ${i===curM?'now':''}"></div></td>`;
+    h+='</tr>';
+  }
+  h+='</table>';
+  const note=lastInfo(a.id,curM,'d'), issue=lastInfo(a.id,curM,'issue');
+  if(note)h+=`<div class="note"><b>ความคืบหน้า (${MONTHS[curM]}):</b> ${note}</div>`;
+  if(issue)h+=`<div class="issue"><b>ปัญหา/แนวทางแก้ไข:</b> ${issue}</div>`;
+  return `<div class="subwrap">${h}</div>`;
+}
+const openSecs=new Set();   // แผนหลักที่ "ขยาย" อยู่ (default ว่าง = หุบทั้งหมด)
+function renderTable(){
+  const tb=document.getElementById('actbody'); tb.innerHTML='';
+  SECTIONS.forEach(sec=>{
+    const items=ACTIVITIES.filter(a=>a.section===sec.code);
+    const t=wAvg(items,curM,false), v=wAvg(items,curM,true);
+    const expanded=openSecs.has(sec.code);
+    const sr=document.createElement('tr');sr.className='secrow'+(expanded?' open':'');
+    sr.innerHTML=`<td colspan="7"><span class="seccaret">▶</span>${SECNAME[sec.code]}
+      <span class="seccount">${items.length} กิจกรรม</span>
+      <span class="seckpi">เป้าหมาย ${fmt(t)}% · ผลงาน <b>${v==null?'–':fmt(v)+'%'}</b></span></td>`;
+    const childRows=[];
+    items.forEach(a=>{
+      const tp=planAt(a,curM),va=actualAt(a.id,curM),s=status(a,curM),pct=va??0;
+      const tr=document.createElement('tr');tr.className='main';tr.style.display=expanded?'':'none';
+      tr.innerHTML=`
+        <td class="name"><div class="nm"><span class="caret">▶</span><div><b>${a.code}</b> ${a.name}${a.output?`<div class="outp">ตัวชี้วัด: ${a.output}</div>`:''}</div></div></td>
+        <td><span class="wchip">${fmt(a.weight)}%</span></td>
+        <td>${fmt(tp)}%</td><td>${va==null?'–':fmt(va)+'%'}</td>
+        <td><div class="pcell"><div class="pbar"><i style="width:${Math.min(pct,100)}%;background:${s.cls==='r'?'var(--red)':s.cls==='a'?'var(--amber)':'var(--blue)'}"></i></div><span>${va==null?'':fmt(va)+'%'}</span></div></td>
+        <td><span class="chip ${s.cls}">${s.txt}</span></td>
+        <td>${wsChip(workStatus(a.id,curM))}</td>`;
+      const trs=document.createElement('tr');trs.className='sub';trs.style.display='none';
+      trs.innerHTML=`<td colspan="7">${ganttHTML(a)}</td>`;
+      tr.addEventListener('click',()=>{const o=trs.style.display!=='none';trs.style.display=o?'none':'';tr.classList.toggle('open',!o);});
+      childRows.push({main:tr,sub:trs});
+    });
+    sr.addEventListener('click',()=>{
+      const willExpand=!openSecs.has(sec.code);
+      if(willExpand)openSecs.add(sec.code);else openSecs.delete(sec.code);
+      sr.classList.toggle('open',willExpand);
+      childRows.forEach(({main,sub})=>{main.style.display=willExpand?'':'none';
+        if(!willExpand){sub.style.display='none';main.classList.remove('open');}});
+    });
+    tb.appendChild(sr);
+    childRows.forEach(({main,sub})=>{tb.appendChild(main);tb.appendChild(sub);});
+  });
+}
+function setAllSecs(open){
+  if(open)SECTIONS.forEach(s=>openSecs.add(s.code)); else openSecs.clear();
+  renderTable();
+}
+function renderAll(){renderKPIs();renderScurve();renderSecBar();renderTable();}
+
+/* ============ popup ============ */
+const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');
+function bindModal(){
+  const bg=document.getElementById('modalBg');
+  bg.addEventListener('click',e=>{if(e.target===bg)bg.style.display='none';});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')bg.style.display='none';});
+  document.addEventListener('click',e=>{const t=e.target.closest('.mcell');if(!t)return;e.stopPropagation();
+    const m=parseInt(t.dataset.m), id=t.dataset.id, a=ACTIVITIES.find(x=>x.id===id);
+    const e2=(ACTUAL[id]||{})[m]||{};
+    document.getElementById('mdTitle').textContent=`${a?a.code+' '+a.name:''}`;
+    document.getElementById('mdMonth').textContent=`เดือน ${MONTHS[m]} ${YEAR_BE}`;
+    document.getElementById('mdBody').innerHTML=(e2.v!=null?`<div class="mpct">ผลงานสะสม ${fmt(e2.v)}%</div><br>`:'')+(e2.d?esc(e2.d):'<i>ไม่มีรายละเอียดเพิ่มเติม</i>')+(e2.issue?`<div class="issue" style="margin-top:10px"><b>ปัญหา:</b> ${esc(e2.issue)}</div>`:'');
+    document.getElementById('mdMeta').textContent=[e2.st?'สถานะงาน: '+e2.st:'',e2.reporter?'รายงานโดย '+e2.reporter:'',e2.date||''].filter(Boolean).join(' · ');
+    document.getElementById('modalBg').style.display='flex';
+  });
+}
+
+/* ============ init ============ */
+function init(){
+  const sel=document.getElementById('monthSel');
+  MONTHS.forEach((m,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${m} ${YEAR_BE}`;sel.appendChild(o);});
+  let def=null;
+  for(let i=11;i>=0;i--){for(const a of ACTIVITIES){if(ACTUAL[a.id]&&ACTUAL[a.id][i]&&ACTUAL[a.id][i].v!=null){def=i;break;}}if(def!=null)break;}
+  if(def==null){const now=new Date();def=(now.getFullYear()===YEAR_BE-543)?now.getMonth():11;}
+  curM=def;sel.value=def;
+  sel.addEventListener('change',e=>{curM=parseInt(e.target.value);renderAll();});
+  document.getElementById('expandAll').addEventListener('click',()=>setAllSecs(true));
+  document.getElementById('collapseAll').addEventListener('click',()=>setAllSecs(false));
+  bindModal();renderAll();
+}
+function useEmbed(){hasActual=loadActualRows(EMBED_ACTUAL);
+  document.getElementById('srcInfo').textContent=hasActual?'แหล่งข้อมูล: แผน RM 2569 + ผลงานจริง (ตัวอย่างฝังในไฟล์)':'แหล่งข้อมูล: แผนปฏิบัติการบริหารความเสี่ยง';}
+fetch('data/rm_actual.csv',{cache:'no-store'})
+ .then(r=>{if(!r.ok)throw 0;return r.text();})
+ .then(t=>{hasActual=loadActualRows(parseCSV(t.replace(/^﻿/,'')));
+   document.getElementById('srcInfo').textContent=hasActual?'แหล่งข้อมูล: แผน RM 2569 + ผลงานจริง (MS Lists → GitHub)':'แหล่งข้อมูล: แผนปฏิบัติการบริหารความเสี่ยง (ยังไม่มีไฟล์ผลงานจริง)';})
+ .catch(()=>useEmbed())
+ .finally(init);
+</script>
+</body>
+</html>
