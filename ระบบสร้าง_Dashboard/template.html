@@ -68,6 +68,13 @@ select#monthSel{font-family:'Sarabun';font-size:.92rem;font-weight:600;padding:9
 .card h2{font-size:1rem;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:9px;margin-bottom:4px}
 .card h2::before{content:'';width:4px;height:16px;border-radius:2px;background:var(--navy2);display:inline-block}
 .card .desc{font-size:.78rem;color:var(--muted);margin-bottom:14px}
+.latecard{border-left:4px solid var(--red)}
+.latelist{list-style:none;margin:8px 0 0;padding:0}
+.latelist li{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:9px 13px;border:1px solid #fecdca;background:var(--red-bg);border-radius:8px;margin-bottom:8px;font-size:.83rem}
+.latelist .lt-name{color:var(--navy);font-weight:600}
+.latelist .lt-sub{color:var(--muted);font-weight:400;font-size:.74rem}
+.latelist .lt-meta{color:var(--red);font-weight:700;white-space:nowrap;font-size:.77rem;text-align:right}
+.lateempty{font-size:.85rem;color:var(--green);background:var(--green-bg);border:1px solid #abefc6;padding:11px 14px;border-radius:8px}
 .grid2{display:grid;grid-template-columns:1.12fr .88fr;gap:20px}
 @media(max-width:980px){.grid2{grid-template-columns:1fr}}
 .chartbox{position:relative;height:330px}
@@ -204,6 +211,12 @@ footer{font-size:.76rem;color:var(--muted);text-align:center;margin-top:30px;lin
       <div class="desc" id="secDesc">เป้าหมาย vs ผลงาน ของแต่ละแผนหลัก (ถ่วงน้ำหนัก)</div>
       <div class="chartbox"><canvas id="secbar"></canvas></div>
     </div>
+  </div>
+
+  <div class="card latecard" id="lateCard" style="display:none">
+    <h2>⚠ กิจกรรมย่อยที่ล่าช้ากว่าแผน <span id="lateCount" style="font-size:.8rem;color:var(--red);font-weight:600"></span></h2>
+    <div class="desc" id="lateDesc"></div>
+    <div id="lateBody"></div>
   </div>
 
   <div class="card">
@@ -483,7 +496,39 @@ function setAllSecs(open){
   if(open)SECTIONS.forEach(s=>openSecs.add(s.code)); else openSecs.clear();
   renderTable();
 }
-function renderAll(){renderPlanBoxes();renderKPIs();renderScurve();renderSecBar();renderTable();}
+function lastPlanned(bits){let last=-1;for(let i=0;i<12;i++)if(bits[i]==='1')last=i;return last;}
+function lateList(m){
+  const out=[];
+  for(const a of scopeActs()){
+    const subs=(a.subs&&a.subs.length)?a.subs:[{id:a.id,code:a.code,name:a.name,bits:'000000000000',_self:true}];
+    for(const s of subs){
+      const v=actualAt(s.id,m);
+      if(s._self){const t=planAt(a,m); if(t>0&&(v==null||v<t-10))out.push({a,s,kind:'behind',t,v:v||0,beh:Math.round(t-(v||0))}); continue;}
+      const last=lastPlanned(s.bits); if(last<0)continue;
+      if(m>last){ if(v==null||v<100) out.push({a,s,kind:'over',due:last,v:v||0,over:m-last,beh:100-(v||0)}); }
+      else { const t=subPlanAt(s.bits,m); if(t!=null&&t>0&&(v==null||v<t-10)) out.push({a,s,kind:'behind',t,v:v||0,beh:Math.round(t-(v||0))}); }
+    }
+  }
+  out.sort((x,y)=>(y.over||0)-(x.over||0)||(y.beh||0)-(x.beh||0));
+  return out;
+}
+function renderLate(){
+  const card=document.getElementById('lateCard'),el=document.getElementById('lateBody'); if(!card)return;
+  card.style.display='';
+  const list=lateList(curM);
+  document.getElementById('lateCount').textContent=list.length?`(${list.length} รายการ)`:'';
+  document.getElementById('lateDesc').textContent=`รายการที่เลยช่วงเวลาตามแผน (Gantt) แต่ยังไม่ครบ 100% หรือผลจริงต่ำกว่าเป้า ≥10 จุด ณ ${MONTHS[curM]} ${YEAR_BE}${selPlan?' · เฉพาะ '+SECNAME[selPlan]:''}`;
+  if(!list.length){el.innerHTML=`<div class="lateempty">✓ ไม่มีกิจกรรมย่อยที่ล่าช้ากว่าแผน ณ ${MONTHS[curM]} ${YEAR_BE}</div>`;return;}
+  let h='<ul class="latelist">';
+  for(const it of list){
+    const meta=it.kind==='over'
+      ? `ครบกำหนด ${MONTHS[it.due]} · เลยมา ${it.over} เดือน · ผลจริง ${it.v}%`
+      : `เป้า ${it.t}% · ผลจริง ${it.v}% · ต่ำกว่าเป้า ${it.beh} จุด`;
+    h+=`<li><span class="lt-name">${it.s.code?it.s.code+' ':''}${it.s.name} <span class="lt-sub">(กิจกรรมที่ ${it.a.code})</span></span><span class="lt-meta">${meta}</span></li>`;
+  }
+  el.innerHTML=h+'</ul>';
+}
+function renderAll(){renderPlanBoxes();renderKPIs();renderScurve();renderSecBar();renderLate();renderTable();}
 
 /* ============ popup ============ */
 const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');
