@@ -112,15 +112,17 @@ tr.open .caret{transform:rotate(90deg)}
 
 /* Sub rows / Gantt */
 tr.sub td{background:#fbfcfe;padding:0}
-.sthead{display:grid;grid-template-columns:1.5fr 215px 1.1fr;gap:14px;font-size:.7rem;color:var(--muted);font-weight:700;padding:2px 0 6px;border-bottom:1px solid var(--line)}
-.strow{display:grid;grid-template-columns:1.5fr 215px 1.1fr;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid #eef1f5}
+.sthead{display:grid;grid-template-columns:1.45fr 250px 1.05fr;gap:14px;font-size:.7rem;color:var(--muted);font-weight:700;padding:2px 0 6px;border-bottom:1px solid var(--line)}
+.strow{display:grid;grid-template-columns:1.45fr 250px 1.05fr;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid #eef1f5}
 .strow .sname{font-size:.82rem;line-height:1.45}
 .strow .sname .chip{font-size:.66rem;margin-left:4px;vertical-align:middle}
-.dualbar{position:relative;height:13px;border-radius:7px;background:#eef2f7}
-.dualbar .ac{position:absolute;left:0;top:0;height:100%;border-radius:7px;transition:.25s}
-.dualbar .tick{position:absolute;top:-3px;width:3px;height:19px;background:var(--orange);border-radius:2px}
-.snum{font-size:.7rem;color:var(--muted);margin-top:5px}
-.snum b{font-weight:700}
+.cmpbar{display:flex;flex-direction:column;gap:5px}
+.cbrow{display:flex;align-items:center;gap:7px}
+.cblabel{font-size:.66rem;color:var(--muted);width:26px;flex:none;text-align:right;font-weight:600}
+.cbtrack{flex:1;height:11px;border-radius:6px;background:#eef2f7;overflow:hidden}
+.cbfill{height:100%;border-radius:6px;transition:.25s}
+.cbfill.tgt{background:#d4b878}
+.cbval{font-size:.69rem;font-weight:700;width:40px;flex:none;text-align:right}
 .smonths{display:flex;gap:2px}
 .smonths i{flex:1;max-width:16px;height:16px;border-radius:2px;background:#eef1f5;display:inline-block;position:relative}
 .smonths i.pl{background:#cdd9e6}
@@ -429,8 +431,10 @@ function ganttHTML(a){
       months+=`<i class="${planned?'pl':''} ${i===curM?'now':''} ${has?'mcell hasrep':''}"${has?` data-id="${s.id}" data-m="${i}" title="${MONTHS[i]} : ${e.v!=null?fmt(e.v)+'%':'รายงาน'} (คลิก)" style="background:${col}"`:` title="${MONTHS[i]}"`}></i>`;}
     h+=`<div class="strow">
       <div class="sname">${s.code?'<b>'+s.code+'</b> ':''}${s.name} <span class="chip ${cls}">${sttxt}</span></div>
-      <div><div class="dualbar"><div class="ac" style="width:${Math.min(v||0,100)}%;background:${col}"></div>${t!=null?`<div class="tick" style="left:${Math.min(t,100)}%"></div>`:''}</div>
-        <div class="snum">เป้า <b>${t==null?'–':t+'%'}</b> · ผลจริง <b style="color:${col}">${v==null?'–':v+'%'}</b>${v!=null&&t!=null?` <span style="color:${col}">(${v-t>=0?'+':''}${v-t})</span>`:''}</div></div>
+      <div class="cmpbar">
+        <div class="cbrow"><span class="cblabel">เป้า</span><div class="cbtrack"><div class="cbfill tgt" style="width:${Math.min(t||0,100)}%"></div></div><span class="cbval" style="color:var(--muted)">${t==null?'–':t+'%'}</span></div>
+        <div class="cbrow"><span class="cblabel">จริง</span><div class="cbtrack"><div class="cbfill" style="width:${Math.min(v||0,100)}%;background:${col}"></div></div><span class="cbval" style="color:${col}">${v==null?'–':v+'%'}</span></div>
+      </div>
       <div class="smonths">${months}</div>
     </div>`;
   }
