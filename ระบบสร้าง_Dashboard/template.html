@@ -112,6 +112,22 @@ tr.open .caret{transform:rotate(90deg)}
 
 /* Sub rows / Gantt */
 tr.sub td{background:#fbfcfe;padding:0}
+.sthead{display:grid;grid-template-columns:1.5fr 215px 1.1fr;gap:14px;font-size:.7rem;color:var(--muted);font-weight:700;padding:2px 0 6px;border-bottom:1px solid var(--line)}
+.strow{display:grid;grid-template-columns:1.5fr 215px 1.1fr;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid #eef1f5}
+.strow .sname{font-size:.82rem;line-height:1.45}
+.strow .sname .chip{font-size:.66rem;margin-left:4px;vertical-align:middle}
+.dualbar{position:relative;height:13px;border-radius:7px;background:#eef2f7}
+.dualbar .ac{position:absolute;left:0;top:0;height:100%;border-radius:7px;transition:.25s}
+.dualbar .tick{position:absolute;top:-3px;width:3px;height:19px;background:var(--orange);border-radius:2px}
+.snum{font-size:.7rem;color:var(--muted);margin-top:5px}
+.snum b{font-weight:700}
+.smonths{display:flex;gap:2px}
+.smonths i{flex:1;max-width:16px;height:16px;border-radius:2px;background:#eef1f5;display:inline-block;position:relative}
+.smonths i.pl{background:#cdd9e6}
+.smonths i.now{outline:2px solid var(--orange);outline-offset:-1px}
+.smonths i.hasrep{cursor:pointer}
+.smonths i.hasrep::after{content:'';position:absolute;top:-3px;right:-2px;width:7px;height:7px;border-radius:50%;background:var(--orange);border:1.5px solid #fff}
+@media(max-width:760px){.sthead{display:none}.strow{grid-template-columns:1fr;gap:6px}}
 .subwrap{padding:14px 18px 18px 46px}
 .gtitle{font-size:.76rem;font-weight:700;color:var(--muted);margin-bottom:10px}
 table.gantt{width:100%;border-collapse:collapse;font-size:.8rem}
@@ -284,6 +300,8 @@ function leafIds(a){return (a.subs&&a.subs.length)?a.subs.map(x=>x.id):[a.id];}
 function actAct(a,m){const ids=leafIds(a);let sum=0,any=false;for(const id of ids){const v=actualAt(id,m);if(v!=null){any=true;sum+=v;}}return any?sum/ids.length:null;}
 function actHasData(a,m){for(const id of leafIds(a))for(let j=0;j<=m;j++){const r=ACTUAL[id];if(r&&r[j]&&r[j].v!=null)return true;}return false;}
 function wsAct(a,m){const ids=leafIds(a);let nd=0,doing=0;for(const id of ids){const st=lastInfo(id,m,'st');if(st===DONE)nd++;else if(st===DOING)doing++;}if(nd===ids.length)return DONE;if(nd>0||doing>0)return DOING;return NOT;}
+function subPlanAt(bits,m){let n=0;for(let i=0;i<12;i++)if(bits[i]==='1')n++;if(!n)return null;let cum=0;for(let i=0;i<=m;i++)if(bits[i]==='1')cum++;return Math.round(100*cum/n);}
+function subStat(t,v){if(t==null||t===0)return['n','ยังไม่ถึงกำหนด','var(--muted)'];if(v==null)return['b','รอรายงาน','var(--blue)'];const d=v-t;if(d>=0)return['g',d>0?'เร็วกว่าแผน':'ตามแผน','var(--green)'];if(d>-10)return['a','ล่าช้าเล็กน้อย','var(--amber)'];return['r','ล่าช้า','var(--red)'];}
 function overall(list,m,useActual){let s=0,wsum=0,has=false;
   for(const a of list){const v=useActual?actAct(a,m):planAt(a,m); wsum+=a.weight;
     if(useActual&&v==null)continue; has=true; s+=a.weight/100*(v??0);}
@@ -398,19 +416,24 @@ function renderSecBar(){
 }
 /* ============ Gantt + Table ============ */
 function ganttHTML(a){
-  const subs=(a.subs&&a.subs.length)?a.subs:[{id:a.id,code:'',name:'(รายงานระดับกิจกรรม)',bits:'000000000000'}];
-  let h=`<div class="gtitle">กิจกรรมย่อย ${subs.length} รายการ · แถบน้ำเงิน = ช่วงทำตามแผน · เดือนเลือก = กรอบส้ม · เลข % / จุดส้ม ● = ผลจริง (คลิกดูรายละเอียด)</div><table class="gantt"><tr><th class="gname"></th>`;
-  MONTHS.forEach((m,i)=>h+=`<th${i===curM?' style="color:var(--navy);font-weight:700"':''}>${m}</th>`);
-  h+='<th style="width:128px">สถานะงาน</th></tr>';
+  const subs=(a.subs&&a.subs.length)?a.subs:[{id:a.id,code:'',name:'(รายงานระดับกิจกรรม)',bits:'000000000000',_self:true}];
+  let h=`<div class="gtitle">กิจกรรมย่อย ${subs.length} รายการ · แถบ = ผลจริง เทียบขีดส้ม (เป้าหมาย) · แถวเดือน: ฟ้า = ช่วงทำตามแผน, ● จุดส้ม = มีรายงาน (คลิกดูรายละเอียด)</div>`;
+  h+=`<div class="sthead"><div>กิจกรรมย่อย</div><div>เป้าหมาย vs ผลจริง (ณ ${MONTHS[curM]})</div><div>ช่วงดำเนินการรายเดือน</div></div>`;
   for(const s of subs){
+    const t=s._self?planAt(a,curM):subPlanAt(s.bits,curM);
+    const v=actualAt(s.id,curM);
+    const [cls,sttxt,col]=subStat(t,v);
     const rec=ACTUAL[s.id]||{};
-    h+=`<tr><td class="gname">${s.code?'<b>'+s.code+'</b> ':''}${s.name}</td>`;
-    for(let i=0;i<12;i++){const e=rec[i],planned=s.bits&&s.bits[i]==='1';
-      if(e&&(e.v!=null||e.d)) h+=`<td><div class="mcell mv ${e.d?'hasd':''}" data-id="${s.id}" data-m="${i}" title="คลิกดูรายละเอียด">${e.v!=null?fmt(e.v):'•'}</div></td>`;
-      else h+=`<td><div class="gcell ${planned?'on':''} ${i===curM?'now':''}"></div></td>`;}
-    h+=`<td style="text-align:center">${wsChip(lastInfo(s.id,curM,'st')||'')}</td></tr>`;
+    let months='';
+    for(let i=0;i<12;i++){const e=rec[i],planned=s.bits&&s.bits[i]==='1',has=e&&(e.v!=null||e.d);
+      months+=`<i class="${planned?'pl':''} ${i===curM?'now':''} ${has?'mcell hasrep':''}"${has?` data-id="${s.id}" data-m="${i}" title="${MONTHS[i]} : ${e.v!=null?fmt(e.v)+'%':'รายงาน'} (คลิก)" style="background:${col}"`:` title="${MONTHS[i]}"`}></i>`;}
+    h+=`<div class="strow">
+      <div class="sname">${s.code?'<b>'+s.code+'</b> ':''}${s.name} <span class="chip ${cls}">${sttxt}</span></div>
+      <div><div class="dualbar"><div class="ac" style="width:${Math.min(v||0,100)}%;background:${col}"></div>${t!=null?`<div class="tick" style="left:${Math.min(t,100)}%"></div>`:''}</div>
+        <div class="snum">เป้า <b>${t==null?'–':t+'%'}</b> · ผลจริง <b style="color:${col}">${v==null?'–':v+'%'}</b>${v!=null&&t!=null?` <span style="color:${col}">(${v-t>=0?'+':''}${v-t})</span>`:''}</div></div>
+      <div class="smonths">${months}</div>
+    </div>`;
   }
-  h+='</table>';
   return `<div class="subwrap">${h}</div>`;
 }
 const openSecs=new Set();   // แผนหลักที่ "ขยาย" อยู่ (default ว่าง = หุบทั้งหมด)
