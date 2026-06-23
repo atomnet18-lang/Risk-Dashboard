@@ -136,6 +136,11 @@ tr.sub td{background:#fbfcfe;padding:0}
 .smonths i.now{outline:2px solid var(--orange);outline-offset:-1px}
 .smonths i.hasrep{cursor:pointer}
 .smonths i.hasrep::after{content:'';position:absolute;top:-3px;right:-2px;width:7px;height:7px;border-radius:50%;background:var(--orange);border:1.5px solid #fff}
+@keyframes pulseTgt{0%{box-shadow:0 0 0 0 rgba(212,184,120,.9)}70%,100%{box-shadow:0 0 0 6px rgba(212,184,120,0)}}
+@keyframes pulseAct{0%{box-shadow:0 0 0 0 rgba(176,123,46,.9)}70%,100%{box-shadow:0 0 0 5px rgba(176,123,46,0)}}
+.smonths i.tgtdot{outline:2px solid #d4b878;outline-offset:1px;animation:pulseTgt 1.4s infinite}
+.smonths i.actdot::after{animation:pulseAct 1.2s infinite}
+@media(prefers-reduced-motion:reduce){.smonths i.tgtdot,.smonths i.actdot::after{animation:none}}
 @media(max-width:760px){.sthead{display:none}.strow{grid-template-columns:1fr;gap:6px}}
 .subwrap{padding:14px 18px 18px 46px}
 .gtitle{font-size:.76rem;font-weight:700;color:var(--muted);margin-bottom:10px}
@@ -440,8 +445,10 @@ function ganttHTML(a){
     const [cls,sttxt,col]=subStat(t,v);
     const rec=ACTUAL[s.id]||{};
     let months='';
+    const tgtM=s.bits?lastPlanned(s.bits):-1; let actM=-1; for(let i=0;i<12;i++)if(rec[i]&&rec[i].v!=null)actM=i;
     for(let i=0;i<12;i++){const e=rec[i],planned=s.bits&&s.bits[i]==='1',has=e&&(e.v!=null||e.d);
-      months+=`<i class="${planned?'pl':''} ${i===curM?'now':''} ${has?'mcell hasrep':''}"${has?` data-id="${s.id}" data-m="${i}" title="${MONTHS[i]} : ${e.v!=null?fmt(e.v)+'%':'รายงาน'} (คลิก)" style="background:${col}"`:` title="${MONTHS[i]}"`}></i>`;}
+      const cl=`${planned?'pl':''} ${i===curM?'now':''} ${has?'mcell hasrep':''} ${i===tgtM?'tgtdot':''} ${i===actM?'actdot':''}`;
+      months+=`<i class="${cl}"${has?` data-id="${s.id}" data-m="${i}" title="${MONTHS[i]} : ${e.v!=null?fmt(e.v)+'%':'รายงาน'} (คลิก)" style="background:${col}"`:` title="${MONTHS[i]}${i===tgtM?' (เป้าหมาย/กำหนดเสร็จ)':''}"`}></i>`;}
     h+=`<div class="strow">
       <div class="sname">${s.code?'<b>'+s.code+'</b> ':''}${s.name} <span class="chip ${cls}">${sttxt}</span></div>
       <div class="cmpbar">
