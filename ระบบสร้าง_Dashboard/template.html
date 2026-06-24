@@ -71,6 +71,19 @@ select#monthSel{font-family:'Sarabun';font-size:.92rem;font-weight:600;padding:9
 .latecard{border-left:4px solid var(--red)}
 .actsumm{background:var(--blue-bg);border-left:3px solid var(--blue);border-radius:0 6px 6px 0;padding:10px 14px;margin-bottom:12px;font-size:.85rem;color:#1d4f9c;line-height:1.55}
 .actsumm .as-h{font-weight:700;color:var(--navy);display:block;margin-bottom:2px}
+.sumico{cursor:pointer;font-size:.9rem;margin-left:5px;vertical-align:middle}
+#summBody{max-height:440px;overflow:auto}
+.summsec{font-weight:700;color:var(--navy);font-size:.82rem;margin:14px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--line)}
+#summBody .summsec:first-child{margin-top:0}
+.summitem{padding:9px 2px;border-bottom:1px solid #eef1f5}
+.summitem .si-h{font-size:.83rem;color:var(--navy);font-weight:600}
+.summitem .si-t{font-size:.82rem;color:var(--text);margin-top:3px;line-height:1.55}
+.summempty{color:var(--muted);font-size:.85rem;text-align:center;padding:18px}
+.sumtbl{width:100%;border-collapse:collapse;font-size:.85rem}
+.sumtbl td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.sumtbl td.mcell{font-weight:700;color:var(--navy);white-space:nowrap;width:56px}
+.sumtbl tr.curm{background:#fff7e6}
+.sumtbl .empty{color:#b3bfba;font-style:italic}
 .latelist{list-style:none;margin:8px 0 0;padding:0}
 .latelist li{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:9px 13px;border:1px solid #fecdca;background:var(--red-bg);border-radius:8px;margin-bottom:8px;font-size:.83rem}
 .latelist .lt-name{color:var(--navy);font-weight:600}
@@ -224,6 +237,12 @@ footer{font-size:.76rem;color:var(--muted);text-align:center;margin-top:30px;lin
     <h2>⚠ กิจกรรมย่อยที่ล่าช้ากว่าแผน <span id="lateCount" style="font-size:.8rem;color:var(--red);font-weight:600"></span></h2>
     <div class="desc" id="lateDesc"></div>
     <div id="lateBody"></div>
+  </div>
+
+  <div class="card" id="summCard">
+    <h2>📋 สรุปผลรายเดือน <span id="summCount" style="font-size:.8rem;color:var(--blue);font-weight:600"></span></h2>
+    <div class="desc" id="summDesc"></div>
+    <div id="summBody"></div>
   </div>
 
   <div class="card">
@@ -487,7 +506,7 @@ function renderTable(){
       const tp=planAt(a,curM),va=actAct(a,curM),s=status(a,curM),pct=va??0;const nsub=(a.subs&&a.subs.length)?a.subs.length:0;
       const tr=document.createElement('tr');tr.className='main';tr.style.display=expanded?'':'none';
       tr.innerHTML=`
-        <td class="name"><div class="nm"><span class="caret">▶</span><div><b>${a.code}</b> ${a.name} ${nsub?`<span style="font-size:.68rem;color:var(--blue);background:var(--blue-bg);border:1px solid #b2ddff;border-radius:10px;padding:1px 7px;white-space:nowrap">${nsub} ย่อย</span>`:''}${a.output?`<div class="outp">ตัวชี้วัด: ${a.output}</div>`:''}</div></div></td>
+        <td class="name"><div class="nm"><span class="caret">▶</span><div><b>${a.code}</b> ${a.name} ${nsub?`<span style="font-size:.68rem;color:var(--blue);background:var(--blue-bg);border:1px solid #b2ddff;border-radius:10px;padding:1px 7px;white-space:nowrap">${nsub} ย่อย</span>`:''}${(SUMMARY[a.id]&&Object.keys(SUMMARY[a.id]).length)?` <span class="sumico" data-sumid="${a.id}" title="ดูสรุปรายเดือน">📋</span>`:''}${a.output?`<div class="outp">ตัวชี้วัด: ${a.output}</div>`:''}</div></div></td>
         <td><span class="wchip">${fmt(a.weight)}%</span></td>
         <td>${fmt(tp)}%</td><td>${va==null?'–':fmt(va)+'%'}</td>
         <td><div class="pcell"><div class="pbar"><i style="width:${Math.min(pct,100)}%;background:${s.cls==='r'?'var(--red)':s.cls==='a'?'var(--amber)':'var(--blue)'}"></i></div><span>${va==null?'':fmt(va)+'%'}</span></div></td>
@@ -545,7 +564,30 @@ function renderLate(){
   }
   el.innerHTML=h+'</ul>';
 }
-function renderAll(){renderPlanBoxes();renderKPIs();renderScurve();renderSecBar();renderLate();renderTable();}
+function openSumm(id){
+  const a=ACTIVITIES.find(x=>x.id===id); if(!a)return;
+  const sm=SUMMARY[id]||{}; let rows='';
+  for(let i=0;i<12;i++){const t=sm[i]; rows+=`<tr class="${i===curM?'curm':''}"><td class="mcell">${MONTHS[i]}</td><td>${t?esc(t):'<span class="empty">— ยังไม่มีสรุป —</span>'}</td></tr>`;}
+  document.getElementById('mdTitle').textContent=`${a.code} ${a.name}`;
+  document.getElementById('mdMonth').textContent='สรุปผลการดำเนินงานรายเดือน · '+SECNAME[a.section];
+  document.getElementById('mdBody').innerHTML=`<table class="sumtbl"><tbody>${rows}</tbody></table>`;
+  document.getElementById('mdMeta').textContent='แถวไฮไลต์ = เดือนที่เลือก ('+MONTHS[curM]+')';
+  document.getElementById('modalBg').style.display='flex';
+}
+function renderSummary(){
+  const card=document.getElementById('summCard'),el=document.getElementById('summBody'); if(!card)return;
+  const list=scopeActs().filter(a=>(SUMMARY[a.id]||{})[curM]);
+  document.getElementById('summCount').textContent=list.length?`(${list.length} กิจกรรม)`:'';
+  document.getElementById('summDesc').textContent=`สรุปผลการดำเนินงานของแต่ละกิจกรรม ณ ${MONTHS[curM]} ${YEAR_BE}${selPlan?' · เฉพาะ '+SECNAME[selPlan]:''} · คลิก 📋 ดูย้อนหลังทุกเดือน`;
+  if(!list.length){el.innerHTML='<div class="summempty">— ยังไม่มีสรุปผลของเดือนนี้ —</div>';return;}
+  let h='',curSec=null;
+  for(const a of list){
+    if(a.section!==curSec){curSec=a.section;h+=`<div class="summsec">${SECNAME[a.section]}</div>`;}
+    h+=`<div class="summitem"><div class="si-h"><b>${a.code}</b> ${a.name} <span class="sumico" data-sumid="${a.id}" title="ดูสรุปย้อนหลังทุกเดือน">📋</span></div><div class="si-t">${SUMMARY[a.id][curM]}</div></div>`;
+  }
+  el.innerHTML=h;
+}
+function renderAll(){renderPlanBoxes();renderKPIs();renderScurve();renderSecBar();renderLate();renderSummary();renderTable();}
 
 /* ============ popup ============ */
 const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');
@@ -553,6 +595,7 @@ function bindModal(){
   const bg=document.getElementById('modalBg');
   bg.addEventListener('click',e=>{if(e.target===bg)bg.style.display='none';});
   document.addEventListener('keydown',e=>{if(e.key==='Escape')bg.style.display='none';});
+  document.addEventListener('click',e=>{const si=e.target.closest('.sumico');if(si){e.stopPropagation();openSumm(si.dataset.sumid);return;}});
   document.addEventListener('click',e=>{const t=e.target.closest('.mcell');if(!t)return;e.stopPropagation();
     const m=parseInt(t.dataset.m), id=t.dataset.id, lf=LEAF[id]||{};
     const e2=(ACTUAL[id]||{})[m]||{};
