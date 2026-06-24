@@ -47,6 +47,23 @@ os.makedirs(os.path.dirname(OUT),exist_ok=True)
 with open(OUT,"w",encoding="utf-8-sig",newline="") as f:
     w=csv.writer(f); w.writerow(CANON); w.writerows(rows)
 print(f"✓ เขียน {OUT}  | กิจกรรมย่อยมีข้อมูล {n} | แถว {len(rows)}")
+# ----- สรุปรายเดือน ระดับกิจกรรม -----
+SUMOUT=os.path.join(ROOT,"data","rm_summary.csv"); srows=[]
+if "สรุปรายเดือน_กิจกรรม" in wb.sheetnames:
+    wss=wb["สรุปรายเดือน_กิจกรรม"]
+    sh=[(wss.cell(1,c).value or "") for c in range(1,wss.max_column+1)]
+    SH={h:i+1 for i,h in enumerate(sh)}; scol={m:SH.get(f"สรุป {m}") for m in MONTHS}; iid=SH.get("รหัสกิจกรรม")
+    for r in range(2,wss.max_row+1):
+        rid=wss.cell(r,iid).value if iid else None
+        if not rid: continue
+        for m in MONTHS:
+            cc=scol.get(m)
+            if not cc: continue
+            t=wss.cell(r,cc).value
+            if t is not None and str(t).strip()!="": srows.append([rid,m,str(t).strip()])
+with open(SUMOUT,"w",encoding="utf-8-sig",newline="") as f:
+    w=csv.writer(f); w.writerow(["รหัสกิจกรรม","เดือน","สรุปผล"]); w.writerows(srows)
+print(f"✓ เขียน {SUMOUT} | สรุป {len(srows)} รายการ")
 print("rebuild index.html ...")
 subprocess.run([sys.executable, os.path.join(HERE,"build_dashboard.py")], check=True)
 print("เสร็จ — git add -A && git commit && git push")

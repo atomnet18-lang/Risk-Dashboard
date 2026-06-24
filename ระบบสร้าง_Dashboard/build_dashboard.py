@@ -21,6 +21,10 @@ if os.path.exists(EMBED_SAMPLE):
 tpl=open(TPL,encoding="utf-8").read()
 html=tpl.replace("/*__RAW__*/", json.dumps(RAW,ensure_ascii=False))
 html=html.replace("/*__EMBED_ACTUAL__*/", json.dumps(embed_rows,ensure_ascii=False))
+SUMCSV=os.path.join(ROOT,"data","rm_summary.csv"); sum_rows=[]
+if os.path.exists(SUMCSV):
+    with open(SUMCSV,encoding="utf-8-sig") as f: sum_rows=list(csv.reader(f))
+html=html.replace("/*__EMBED_SUMMARY__*/", json.dumps(sum_rows,ensure_ascii=False))
 open(OUT,"w",encoding="utf-8").write(html)
 os.makedirs(os.path.join(ROOT,"data"),exist_ok=True)
 nsub=sum(len(a["subs"]) for a in acts)

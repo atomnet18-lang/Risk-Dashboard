@@ -69,6 +69,8 @@ select#monthSel{font-family:'Sarabun';font-size:.92rem;font-weight:600;padding:9
 .card h2::before{content:'';width:4px;height:16px;border-radius:2px;background:var(--navy2);display:inline-block}
 .card .desc{font-size:.78rem;color:var(--muted);margin-bottom:14px}
 .latecard{border-left:4px solid var(--red)}
+.actsumm{background:var(--blue-bg);border-left:3px solid var(--blue);border-radius:0 6px 6px 0;padding:10px 14px;margin-bottom:12px;font-size:.85rem;color:#1d4f9c;line-height:1.55}
+.actsumm .as-h{font-weight:700;color:var(--navy);display:block;margin-bottom:2px}
 .latelist{list-style:none;margin:8px 0 0;padding:0}
 .latelist li{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:9px 13px;border:1px solid #fecdca;background:var(--red-bg);border-radius:8px;margin-bottom:8px;font-size:.83rem}
 .latelist .lt-name{color:var(--navy);font-weight:600}
@@ -269,6 +271,7 @@ footer{font-size:.76rem;color:var(--muted);text-align:center;margin-top:30px;lin
 /* ============ ข้อมูลแผน (ฝังจาก Excel) ============ */
 const RAW = /*__RAW__*/;
 const EMBED_ACTUAL = /*__EMBED_ACTUAL__*/;
+const EMBED_SUMMARY = /*__EMBED_SUMMARY__*/;
 const MONTHS = RAW.months, YEAR_BE = RAW.year_be;
 const ACTIVITIES = RAW.activities;
 const SECTIONS = RAW.sections;
@@ -280,6 +283,7 @@ document.getElementById('actCount').textContent=ACTIVITIES.length;
 
 /* ============ ผลงานจริง ============ */
 let ACTUAL={};   // ACTUAL[id][m]={v,d,st,issue,reporter,date}
+let SUMMARY={};   // SUMMARY[activityId][m]=ข้อความสรุป
 const THM={'ม.ค.':1,'ก.พ.':2,'มี.ค.':3,'เม.ย.':4,'พ.ค.':5,'มิ.ย.':6,'ก.ค.':7,'ส.ค.':8,'ก.ย.':9,'ต.ค.':10,'พ.ย.':11,'ธ.ค.':12};
 function parseCSV(t){const rows=[];let row=[],cur='',q=false;
   for(let i=0;i<t.length;i++){const ch=t[i];
@@ -442,7 +446,8 @@ function renderSecBar(){
 /* ============ Gantt + Table ============ */
 function ganttHTML(a){
   const subs=(a.subs&&a.subs.length)?a.subs:[{id:a.id,code:'',name:'(รายงานระดับกิจกรรม)',bits:'000000000000',_self:true}];
-  let h=`<div class="gtitle">กิจกรรมย่อย ${subs.length} รายการ · แถบ = ผลจริง เทียบขีดส้ม (เป้าหมาย) · แถวเดือน: ฟ้า = ช่วงทำตามแผน, ● จุดส้ม = มีรายงาน (คลิกดูรายละเอียด)</div>`;
+  const _sm=(SUMMARY[a.id]||{})[curM]; const sumBox=_sm?`<div class="actsumm"><span class="as-h">📋 สรุปผลการดำเนินงาน · ${MONTHS[curM]} ${YEAR_BE}</span>${_sm}</div>`:'';
+  let h=sumBox+`<div class="gtitle">กิจกรรมย่อย ${subs.length} รายการ · แถบ = ผลจริง เทียบขีดส้ม (เป้าหมาย) · แถวเดือน: ฟ้า = ช่วงทำตามแผน, ● จุดส้ม = มีรายงาน (คลิกดูรายละเอียด)</div>`;
   h+=`<div class="sthead"><div>กิจกรรมย่อย</div><div>เป้าหมาย vs ผลจริง (ณ ${MONTHS[curM]})</div><div>ช่วงดำเนินการรายเดือน</div></div>`;
   for(const s of subs){
     const t=leafTarget(a,s,curM);
@@ -572,14 +577,23 @@ function init(){
   document.getElementById('collapseAll').addEventListener('click',()=>setAllSecs(false));
   bindModal();renderAll();
 }
+function loadSummaryRows(rows){SUMMARY={}; if(!rows||rows.length<2)return;
+  const h=rows[0].map(x=>(x||'').replace(/^﻿/,'').trim().toLowerCase());
+  const idx=ns=>h.findIndex(c=>ns.some(n=>c.includes(n)));
+  const iId=idx(['รหัสกิจกรรม','รหัส','id']),iM=idx(['เดือน','month']),iS=idx(['สรุป','summary']);
+  if(iId<0||iM<0||iS<0)return;
+  for(let r=1;r<rows.length;r++){const c=rows[r];const id=(c[iId]||'').trim();if(!id)continue;let m=(c[iM]||'').trim();m=THM[m]||parseInt(m);if(!m||m<1||m>12)continue;const txt=(c[iS]||'').trim();if(!txt)continue;SUMMARY[id]=SUMMARY[id]||{};SUMMARY[id][m-1]=txt;}
+}
 function useEmbed(){hasActual=loadActualRows(EMBED_ACTUAL);
   document.getElementById('srcInfo').textContent=hasActual?'แหล่งข้อมูล: แผน RM 2569 + ผลงานจริง (ตัวอย่างฝังในไฟล์)':'แหล่งข้อมูล: แผนปฏิบัติการบริหารความเสี่ยง';}
-fetch('data/rm_actual.csv',{cache:'no-store'})
- .then(r=>{if(!r.ok)throw 0;return r.text();})
+const pAct=fetch('data/rm_actual.csv',{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.text();})
  .then(t=>{hasActual=loadActualRows(parseCSV(t.replace(/^﻿/,'')));
-   document.getElementById('srcInfo').textContent=hasActual?'แหล่งข้อมูล: แผน RM 2569 + ผลงานจริง (MS Lists → GitHub)':'แหล่งข้อมูล: แผนปฏิบัติการบริหารความเสี่ยง (ยังไม่มีไฟล์ผลงานจริง)';})
- .catch(()=>useEmbed())
- .finally(init);
+   document.getElementById('srcInfo').textContent=hasActual?'แหล่งข้อมูล: แผน RM 2569 + ผลงานจริง (Excel → GitHub)':'แหล่งข้อมูล: แผนปฏิบัติการบริหารความเสี่ยง';})
+ .catch(()=>useEmbed());
+const pSum=fetch('data/rm_summary.csv',{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.text();})
+ .then(t=>loadSummaryRows(parseCSV(t.replace(/^﻿/,''))))
+ .catch(()=>loadSummaryRows(EMBED_SUMMARY));
+Promise.all([pAct,pSum]).finally(init);
 </script>
 </body>
 </html>

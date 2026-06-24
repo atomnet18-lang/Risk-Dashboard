@@ -97,6 +97,30 @@ for r in range(1,w3.max_row+1):
 w3["A9"].font=title
 w3.column_dimensions["A"].width=10; w3.column_dimensions["B"].width=92
 
+# ===== Sheet: สรุปรายเดือน (ระดับกิจกรรม 48 หัวข้อ) =====
+def _cf(arr,m):
+    v=0
+    for i in range(m+1):
+        if arr[i] is not None: v=arr[i]
+    return v
+wss=wb.create_sheet("สรุปรายเดือน_กิจกรรม")
+SH=["รหัสกิจกรรม","รหัส","ชื่อกิจกรรม/มาตรการ","แผนหลัก"]+[f"สรุป {m}" for m in M]
+wss.append(SH)
+for a in acts:
+    cells=[""]*12
+    for mi in range(6):
+        if _cf(a["plan"],mi)>0:
+            cells[mi]=f'ดำเนินการ {a["name"][:30]} ตามแผนในเดือน{M[mi]} (สรุปย่อ — แก้เป็นเนื้อหาจริงได้)'
+    wss.append([a["id"],a["code"],a["name"],a["section"]]+cells)
+for c in range(1,len(SH)+1):
+    x=wss.cell(1,c); x.fill=HEADF; x.font=HF; x.alignment=ctr; x.border=B
+for r in range(2,wss.max_row+1):
+    for c in range(1,len(SH)+1):
+        cell=wss.cell(r,c); cell.border=B; cell.alignment=wrap
+        if c<=4: cell.fill=REF
+for i,w in enumerate([15,8,42,8]+[40]*12,1): wss.column_dimensions[col(i)].width=w
+wss.freeze_panes="E2"; wss.row_dimensions[1].height=22
+
 out=os.path.join(ROOT,"บันทึกผลการดำเนินงาน_RM_2569.xlsx")
 wb.save(out)
 print("saved:",os.path.basename(out),"| cols=",NC,"| rows=",len(lv))
