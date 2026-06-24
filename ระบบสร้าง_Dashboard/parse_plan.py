@@ -66,6 +66,8 @@ while r <= maxrow:
         sec_n += 1
         sec = {"type":"section","id":f"S{sec_n}","code":m.group(1)+".",
                "name":a,"children":[]}
+        if norm(cell(r+1,1))=="" and norm(cell(r+1,2))=="" and is_pct_row(r+1):
+            sec["plan"]=monthly(r+1)
         items.append(sec); sub=mea=None; r+=1; continue
 
     # ---- Measure (x.y.z) in col B ----
@@ -114,6 +116,18 @@ while r <= maxrow:
 def finalize(node):
     pass
 
+def _cf(arr,m):
+    v=0
+    for i in range(m+1):
+        if arr[i] is not None: v=arr[i]
+    return v
+for _s in items:
+    if "plan" not in _s:
+        _subs=[c for c in _s["children"] if c["type"]=="subplan"]
+        if _subs:
+            _s["plan"]=[min(100,round(sum(_cf(c.get("plan_pct") or [None]*12,m) for c in _subs)/len(_subs))) for m in range(12)]
+        else:
+            _s["plan"]=[None]*12
 out = {"year":"2569","months":MONTHS,"sections":items}
 with open(os.path.join(HERE,"plan_data.json"),"w",encoding="utf-8") as f:
     json.dump(out, f, ensure_ascii=False, indent=1)

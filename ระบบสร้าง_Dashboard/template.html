@@ -293,16 +293,16 @@ function loadActualRows(rows){
   if(!rows||rows.length<2)return false;
   const h=rows[0].map(x=>(x||'').replace(/^﻿/,'').trim().toLowerCase());
   const idx=ns=>h.findIndex(c=>ns.some(n=>c.includes(n)));
-  const iId=idx(['รหัสกิจกรรม','รหัส','activityid','aid','id']),iM=idx(['เดือน','month']),iV=idx(['percent','ผลงาน','actual','จริง']),
+  const iId=idx(['รหัสกิจกรรม','รหัส','activityid','aid','id']),iM=idx(['เดือน','month']),iV=idx(['percent_จริง','จริง','ผลงาน','actual']),iT=idx(['percent_เป้าหมาย','เป้าหมาย','target']),
         iSt=idx(['สถานะ','status']),iD=idx(['รายละเอียด','note','detail']),
         iIss=idx(['ปัญหา','issue']),iR=idx(['ผู้รายงาน','reporter']),iDt=idx(['วันที่','date']);
   if(iId<0||iM<0)return false; let n=0; ACTUAL={};
   for(let r=1;r<rows.length;r++){const c=rows[r]; const id=(c[iId]||'').trim(); if(!id)continue;
     let m=(c[iM]||'').trim(); m=THM[m]||parseInt(m); if(!m||m<1||m>12)continue; const mi=m-1;
-    let v=iV>=0?(c[iV]??'').toString().replace('%','').trim():''; v=(v===''?null:parseFloat(v));
-    if(v!=null&&v>0&&v<=1&&!Number.isInteger(v))v*=100;
+    const pf=x=>{x=(x??'').toString().replace('%','').trim(); if(x==='')return null; let f=parseFloat(x); if(f>0&&f<=1&&!Number.isInteger(f))f*=100; return f;};
+    let v=iV>=0?pf(c[iV]):null, t=iT>=0?pf(c[iT]):null;
     ACTUAL[id]=ACTUAL[id]||{};
-    ACTUAL[id][mi]={v,d:iD>=0?(c[iD]||'').trim():'',st:iSt>=0?(c[iSt]||'').trim():'',
+    ACTUAL[id][mi]={v,t,d:iD>=0?(c[iD]||'').trim():'',st:iSt>=0?(c[iSt]||'').trim():'',
       issue:iIss>=0?(c[iIss]||'').trim():'',reporter:iR>=0?(c[iR]||'').trim():'',date:iDt>=0?(c[iDt]||'').trim():''};
     n++;
   }
@@ -319,17 +319,22 @@ ACTIVITIES.forEach(a=>{ if(a.subs&&a.subs.length){a.subs.forEach(x=>{LEAF[x.id]=
 function leafIds(a){return (a.subs&&a.subs.length)?a.subs.map(x=>x.id):[a.id];}
 function actAct(a,m){const ids=leafIds(a);let sum=0,any=false;for(const id of ids){const v=actualAt(id,m);if(v!=null){any=true;sum+=v;}}return any?sum/ids.length:null;}
 function actHasData(a,m){for(const id of leafIds(a))for(let j=0;j<=m;j++){const r=ACTUAL[id];if(r&&r[j]&&r[j].v!=null)return true;}return false;}
+function targetAt(id,m){let r=null;const rec=ACTUAL[id]||{};for(let i=0;i<=m;i++)if(rec[i]&&rec[i].t!=null)r=rec[i].t;return r;}
+function leafTarget(a,s,m){const td=targetAt(s.id,m); if(td!=null)return td; if(s.bits&&s.bits.indexOf('1')>=0)return subPlanAt(s.bits,m); return planAt(a,m);}
+function actTarget(a,m){const subs=(a.subs&&a.subs.length)?a.subs:[{id:a.id,bits:null,_self:true}]; let sum=0,nn=0; for(const s of subs){const t=leafTarget(a,s,m); if(t!=null){sum+=t;nn++;}} return nn?sum/nn:planAt(a,m);}
+function secTargetAt(code,m){const sx=SECTIONS.find(x=>x.code===code); if(!sx||!sx.plan)return null; let v=null; for(let i=0;i<=m;i++)if(sx.plan[i]!=null)v=sx.plan[i]; return v;}
+function overallSecTarget(m){let sum=0,w=0; for(const sx of SECTIONS){const t=secTargetAt(sx.code,m); if(t==null)continue; const sw=ACTIVITIES.filter(a=>a.section===sx.code).reduce((x,a)=>x+a.weight,0); sum+=sw*t; w+=sw;} return w?sum/w:null;}
 function wsAct(a,m){const ids=leafIds(a);let nd=0,doing=0;for(const id of ids){const st=lastInfo(id,m,'st');if(st===DONE)nd++;else if(st===DOING)doing++;}if(nd===ids.length)return DONE;if(nd>0||doing>0)return DOING;return NOT;}
 function subPlanAt(bits,m){let n=0;for(let i=0;i<12;i++)if(bits[i]==='1')n++;if(!n)return null;let cum=0;for(let i=0;i<=m;i++)if(bits[i]==='1')cum++;return Math.round(100*cum/n);}
 function subStat(t,v){if(t==null||t===0)return['n','ยังไม่ถึงกำหนด','var(--muted)'];if(v==null)return['b','รอรายงาน','var(--blue)'];const d=v-t;if(d>=0)return['g',d>0?'เร็วกว่าแผน':'ตามแผน','var(--green)'];if(d>-10)return['a','ล่าช้าเล็กน้อย','var(--amber)'];return['r','ล่าช้า','var(--red)'];}
 function overall(list,m,useActual){let s=0,wsum=0,has=false;
-  for(const a of list){const v=useActual?actAct(a,m):planAt(a,m); wsum+=a.weight;
+  for(const a of list){const v=useActual?actAct(a,m):actTarget(a,m); wsum+=a.weight;
     if(useActual&&v==null)continue; has=true; s+=a.weight/100*(v??0);}
   if(useActual&&!has)return null;
   // normalize ถ้า subset ไม่ครบ 100
   return wsum>0? s*(100/ (list===ACTIVITIES?100:wsum)) : s;
 }
-function status(a,m){const t=planAt(a,m),v=actAct(a,m);
+function status(a,m){const t=actTarget(a,m),v=actAct(a,m);
   if(t===0)return{cls:'n',txt:'ยังไม่ถึงกำหนด'};
   if(v==null)return{cls:'b',txt:'รอรายงานผล'};
   const d=v-t; if(d>=0)return{cls:'g',txt:d>0?'เร็วกว่าแผน':'ตามแผน'};
@@ -349,7 +354,7 @@ function renderPlanBoxes(){
   const box=document.getElementById('planBoxes');box.innerHTML='';
   SECTIONS.forEach(sec=>{
     const acts=ACTIVITIES.filter(a=>a.section===sec.code);
-    const t=wAvg(acts,curM,false), v=wAvg(acts,curM,true);
+    const t=secTargetAt(sec.code,curM), v=wAvg(acts,curM,true);
     let cls,txt;
     if(v==null){cls='b';txt='รอรายงานผล';}
     else{const dd=v-t; if(dd>=0){cls='g';txt='ตามแผน';} else if(dd>-10){cls='a';txt='ล่าช้าเล็กน้อย';} else {cls='r';txt='ล่าช้า';}}
@@ -376,7 +381,7 @@ function renderPlanBoxes(){
 /* ============ KPI ============ */
 function renderKPIs(){
   const SA=scopeActs(), SL=scopeLeaves();
-  const t=overall(SA,curM,false), v=overall(SA,curM,true);
+  const t=(selPlan?secTargetAt(selPlan,curM):overallSecTarget(curM))||0, v=overall(SA,curM,true);
   const d=v==null?null:v-t;
   let g=0,a=0,r=0,n=0,wd=0,wg=0,wn=0;
   SA.forEach(x=>{const s=status(x,curM); if(s.cls==='g')g++;else if(s.cls==='a')a++;else if(s.cls==='r')r++;else n++;});
@@ -403,12 +408,12 @@ function renderKPIs(){
 const F={family:'Sarabun'};
 function wAvg(list,m,useActual){ // ค่าเฉลี่ยถ่วงน้ำหนักภายในกลุ่ม (0-100)
   let s=0,w=0,has=false;
-  for(const a of list){const v=useActual?actAct(a,m):planAt(a,m); if(useActual&&v==null)continue; has=true; s+=a.weight*(v??0); w+=a.weight;}
+  for(const a of list){const v=useActual?actAct(a,m):actTarget(a,m); if(useActual&&v==null)continue; has=true; s+=a.weight*(v??0); w+=a.weight;}
   if(useActual&&!has)return null; return w>0?s/w:0;
 }
 function renderScurve(){
   const SA=scopeActs();
-  const plan=MONTHS.map((_,i)=>Math.round(wAvg(SA,i,false)*100)/100);
+  const plan=MONTHS.map((_,i)=>{const x=selPlan?secTargetAt(selPlan,i):overallSecTarget(i);return x==null?null:Math.round(x*100)/100;});
   const act=MONTHS.map((_,i)=>{if(!hasActual)return null;
     let any=SA.some(a=>actHasData(a,i));
     if(!any)return null;const v=wAvg(SA,i,true);return v==null?null:Math.round(v*100)/100;});
@@ -424,7 +429,7 @@ function renderScurve(){
 function renderSecBar(){
   document.getElementById('secDesc').textContent=`เป้าหมาย vs ผลงาน ของแต่ละแผนหลัก ณ ${MONTHS[curM]} ${YEAR_BE} (ถ่วงน้ำหนัก)`;
   const labels=SECTIONS.map(s=>'แผน '+s.code.replace('.',''));
-  const t=SECTIONS.map(s=>Math.round(wAvg(ACTIVITIES.filter(a=>a.section===s.code),curM,false)*100)/100);
+  const t=SECTIONS.map(s=>{const x=secTargetAt(s.code,curM);return x==null?0:Math.round(x*100)/100;});
   const v=SECTIONS.map(s=>{const x=wAvg(ACTIVITIES.filter(a=>a.section===s.code),curM,true);return x==null?null:Math.round(x*100)/100;});
   if(secbar)secbar.destroy();
   secbar=new Chart(document.getElementById('secbar'),{type:'bar',
@@ -440,7 +445,7 @@ function ganttHTML(a){
   let h=`<div class="gtitle">กิจกรรมย่อย ${subs.length} รายการ · แถบ = ผลจริง เทียบขีดส้ม (เป้าหมาย) · แถวเดือน: ฟ้า = ช่วงทำตามแผน, ● จุดส้ม = มีรายงาน (คลิกดูรายละเอียด)</div>`;
   h+=`<div class="sthead"><div>กิจกรรมย่อย</div><div>เป้าหมาย vs ผลจริง (ณ ${MONTHS[curM]})</div><div>ช่วงดำเนินการรายเดือน</div></div>`;
   for(const s of subs){
-    const t=s._self?planAt(a,curM):subPlanAt(s.bits,curM);
+    const t=leafTarget(a,s,curM);
     const v=actualAt(s.id,curM);
     const [cls,sttxt,col]=subStat(t,v);
     const rec=ACTUAL[s.id]||{};
@@ -510,10 +515,10 @@ function lateList(m){
     const subs=(a.subs&&a.subs.length)?a.subs:[{id:a.id,code:a.code,name:a.name,bits:'000000000000',_self:true}];
     for(const s of subs){
       const v=actualAt(s.id,m);
-      if(s._self){const t=planAt(a,m); if(t>0&&(v==null||v<t-10))out.push({a,s,kind:'behind',t,v:v||0,beh:Math.round(t-(v||0))}); continue;}
+      if(s._self){const t=leafTarget(a,s,m); if(t>0&&(v==null||v<t-10))out.push({a,s,kind:'behind',t,v:v||0,beh:Math.round(t-(v||0))}); continue;}
       const last=lastPlanned(s.bits); if(last<0)continue;
       if(m>last){ if(v==null||v<100) out.push({a,s,kind:'over',due:last,v:v||0,over:m-last,beh:100-(v||0)}); }
-      else { const t=subPlanAt(s.bits,m); if(t!=null&&t>0&&(v==null||v<t-10)) out.push({a,s,kind:'behind',t,v:v||0,beh:Math.round(t-(v||0))}); }
+      else { const t=leafTarget(a,s,m); if(t!=null&&t>0&&(v==null||v<t-10)) out.push({a,s,kind:'behind',t,v:v||0,beh:Math.round(t-(v||0))}); }
     }
   }
   out.sort((x,y)=>(y.over||0)-(x.over||0)||(y.beh||0)-(x.beh||0));

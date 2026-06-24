@@ -8,7 +8,7 @@ HERE=os.path.dirname(os.path.abspath(__file__))
 
 # คอลัมน์มาตรฐานสำหรับ SharePoint/CSV (ระดับกิจกรรมย่อย)
 CANON=["รหัสกิจกรรม","แผนหลัก","แผนงานย่อย","กิจกรรมหลัก","ชื่อกิจกรรมย่อย","ผู้รับผิดชอบ",
-       "เดือน","percent_จริง","สถานะงาน","รายละเอียดการดำเนินการ","ปัญหาอุปสรรค","ผู้รายงาน","วันที่รายงาน"]
+       "เดือน","percent_เป้าหมาย","percent_จริง","สถานะงาน","รายละเอียดการดำเนินการ","ปัญหาอุปสรรค","ผู้รายงาน","วันที่รายงาน"]
 DONE,DOING,NOT="เสร็จสิ้น","อยู่ระหว่างดำเนินการ","ยังไม่ดำเนินการ"
 
 def _bits(sched):
@@ -52,7 +52,7 @@ def build(plan=None):
             "plan":[(v if v is not None else None) for v in (node.get("plan_pct") or [None]*12)],
             "subs":subs,
         })
-    sections=[{"code":s["code"],"name":s["name"]} for s in d["sections"]]
+    sections=[{"code":s["code"],"name":s["name"],"plan":[(v if v is not None else None) for v in (s.get("plan") or [None]*12)]} for s in d["sections"]]
     return M,acts,sections
 
 def leaves(acts):
