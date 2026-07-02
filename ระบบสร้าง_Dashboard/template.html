@@ -141,6 +141,8 @@ tr.sub td{background:#fbfcfe;padding:0}
 .strow{display:grid;grid-template-columns:1.45fr 250px 1.05fr;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid #eef1f5}
 .strow .sname{font-size:.82rem;line-height:1.45}
 .strow .sname .chip{font-size:.66rem;margin-left:4px;vertical-align:middle}
+.strow.rownow{background:#fff7e6;border-radius:6px}
+.mvlink{cursor:pointer;color:var(--blue);font-weight:600}
 .cmpbar{display:flex;flex-direction:column;gap:5px}
 .cbrow{display:flex;align-items:center;gap:7px}
 .cblabel{font-size:.66rem;color:var(--muted);width:26px;flex:none;text-align:right;font-weight:600}
@@ -238,7 +240,7 @@ footer{font-size:.76rem;color:var(--muted);text-align:center;margin-top:30px;lin
 
   <div class="grid2" style="margin-bottom:20px">
     <div class="card latecard" id="lateCard" style="margin-bottom:0;display:none">
-      <h2>⚠ กิจกรรมย่อยที่ล่าช้ากว่าแผน <span id="lateCount" style="font-size:.8rem;color:var(--red);font-weight:600"></span></h2>
+      <h2>⚠ กิจกรรมที่ล่าช้ากว่าแผน <span id="lateCount" style="font-size:.8rem;color:var(--red);font-weight:600"></span></h2>
       <div class="desc" id="lateDesc"></div>
       <div id="lateBody"></div>
     </div>
@@ -403,7 +405,7 @@ function renderPlanBoxes(){
       <div class="pbname">${sec.name.replace(/^\s*\d+\.\s*/,'')}</div>
       <div class="pbnum"><b>${fmt(v)}</b><small>%</small><small>/ เป้า ${fmt(t)}%</small><span class="chip ${cls}">${txt}</span></div>
       <div class="track"><div class="fill" style="width:${Math.min(v||0,100)}%;background:${colr}"></div><div class="tmark" style="left:${Math.min(t||0,100)}%"></div></div>
-      <div class="pbmeta"><span>${acts.length} กิจกรรม · ${nsub||acts.length} ย่อย</span><span>${active?'● กำลังดูแผนนี้':'คลิกเพื่อดูเฉพาะแผนนี้'}</span></div>`;
+      <div class="pbmeta"><span>${acts.length} กิจกรรม</span><span>${active?'● กำลังดูแผนนี้':'คลิกเพื่อดูเฉพาะแผนนี้'}</span></div>`;
     d.onclick=()=>{selPlan=(selPlan===sec.code)?null:sec.code; openSecs.clear(); if(selPlan)openSecs.add(selPlan); renderAll();};
     box.appendChild(d);
   });
@@ -433,7 +435,7 @@ function renderKPIs(){
      <div class="val" style="font-size:1.2rem;display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
        <span class="chip g">✓ ${g}</span><span class="chip a">! ${a}</span><span class="chip r">✕ ${r}</span><span class="chip n">○ ${n}</span></div>
      <div class="sub" style="margin-top:6px">ตามแผน · ล่าช้าเล็กน้อย · ล่าช้า · ยังไม่ถึงกำหนด/รอผล</div></div>
-   <div class="kpi" style="--accent:var(--orange)"><div class="lbl">สถานะงานย่อย (${SL.length} รายการ)</div>
+   <div class="kpi" style="--accent:var(--orange)"><div class="lbl">สถานะงาน (${SL.length} กิจกรรม)</div>
      <div class="val" style="font-size:1.2rem;display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
        <span class="chip g">✓ ${wd}</span><span class="chip b">⟳ ${wg}</span><span class="chip n">○ ${wn}</span></div>
      <div class="sub" style="margin-top:6px">เสร็จสิ้น · อยู่ระหว่างดำเนินการ · ยังไม่ดำเนินการ/ไม่ระบุ</div></div>`;
@@ -476,27 +478,23 @@ function renderSecBar(){
 }
 /* ============ Gantt + Table ============ */
 function ganttHTML(a){
-  const subs=(a.subs&&a.subs.length)?a.subs:[{id:a.id,code:'',name:'(รายงานระดับกิจกรรม)',bits:'000000000000',_self:true}];
   const _sm=(SUMMARY[a.id]||{})[curM]; const sumBox=_sm?`<div class="actsumm"><span class="as-h">📋 สรุปผลการดำเนินงาน · ${MONTHS[curM]} ${YEAR_BE}</span>${_sm}</div>`:'';
-  let h=sumBox+`<div class="gtitle">กิจกรรมย่อย ${subs.length} รายการ · แถบ = ผลจริง เทียบขีดส้ม (เป้าหมาย) · แถวเดือน: ฟ้า = ช่วงทำตามแผน, ● จุดส้ม = มีรายงาน (คลิกดูรายละเอียด)</div>`;
-  h+=`<div class="sthead"><div>กิจกรรมย่อย</div><div>เป้าหมาย vs ผลจริง (ณ ${MONTHS[curM]})</div><div>ช่วงดำเนินการรายเดือน</div></div>`;
-  for(const s of subs){
-    const t=leafTarget(a,s,curM);
-    const v=actualAt(s.id,curM);
+  let h=sumBox+`<div class="gtitle">ความคืบหน้ารายเดือน · เป้าหมาย (ขีดบน) เทียบ ผลจริง (แถบล่าง) · เดือนที่เลือกไฮไลต์ · คลิก "ดู" อ่านรายละเอียด</div>`;
+  h+=`<div class="sthead"><div>เดือน</div><div>เป้าหมาย vs ผลจริง</div><div>รายละเอียด</div></div>`;
+  const rec=ACTUAL[a.id]||{};
+  for(let i=0;i<12;i++){
+    let t=targetAt(a.id,i); if(t==null)t=(a.plan[i]!=null?planAt(a,i):null);
+    const v=actualAt(a.id,i);
+    if((t==null||t===0)&&v==null)continue;
     const [cls,sttxt,col]=subStat(t,v);
-    const rec=ACTUAL[s.id]||{};
-    let months='';
-    const tgtM=s.bits?lastPlanned(s.bits):-1; let actM=-1; for(let i=0;i<12;i++)if(rec[i]&&rec[i].v!=null)actM=i;
-    for(let i=0;i<12;i++){const e=rec[i],planned=s.bits&&s.bits[i]==='1',has=e&&(e.v!=null||e.d);
-      const cl=`${planned?'pl':''} ${i===curM?'now':''} ${has?'mcell hasrep':''} ${i===tgtM?'tgtdot':''} ${i===actM?'actdot':''}`;
-      months+=`<i class="${cl}"${has?` data-id="${s.id}" data-m="${i}" title="${MONTHS[i]} : ${e.v!=null?fmt(e.v)+'%':'รายงาน'} (คลิก)" style="background:${col}"`:` title="${MONTHS[i]}${i===tgtM?' (เป้าหมาย/กำหนดเสร็จ)':''}"`}></i>`;}
-    h+=`<div class="strow">
-      <div class="sname">${s.code?'<b>'+s.code+'</b> ':''}${s.name} <span class="chip ${cls}">${sttxt}</span></div>
+    const e=rec[i]||{};
+    h+=`<div class="strow${i===curM?' rownow':''}">
+      <div class="sname"><b>${MONTHS[i]} ${YEAR_BE}</b> <span class="chip ${cls}">${sttxt}</span></div>
       <div class="cmpbar">
-        <div class="cbrow"><span class="cblabel">เป้า</span><div class="cbtrack"><div class="cbfill tgt" style="width:${Math.min(t||0,100)}%"></div></div><span class="cbval" style="color:var(--muted)">${t==null?'–':t+'%'}</span></div>
+        <div class="cbrow"><span class="cblabel">เป้า</span><div class="cbtrack"><div class="cbfill tgt" style="width:${Math.min(t||0,100)}%"></div></div><span class="cbval" style="color:var(--muted)">${t==null?'–':Math.round(t)+'%'}</span></div>
         <div class="cbrow"><span class="cblabel">จริง</span><div class="cbtrack"><div class="cbfill" style="width:${Math.min(v||0,100)}%;background:${col}"></div></div><span class="cbval" style="color:${col}">${v==null?'–':v+'%'}</span></div>
       </div>
-      <div class="smonths">${months}</div>
+      <div>${e.d?`<span class="mcell mvlink" data-id="${a.id}" data-m="${i}">ดู ›</span>`:'<span style="color:var(--muted)">–</span>'}</div>
     </div>`;
   }
   return `<div class="subwrap">${h}</div>`;
@@ -566,13 +564,13 @@ function renderLate(){
   const list=lateList(curM);
   document.getElementById('lateCount').textContent=list.length?`(${list.length} รายการ)`:'';
   document.getElementById('lateDesc').textContent=`รายการที่เลยช่วงเวลาตามแผน (Gantt) แต่ยังไม่ครบ 100% หรือผลจริงต่ำกว่าเป้า ≥10 จุด ณ ${MONTHS[curM]} ${YEAR_BE}${selPlan?' · เฉพาะ '+SECNAME[selPlan]:''}`;
-  if(!list.length){el.innerHTML=`<div class="lateempty">✓ ไม่มีกิจกรรมย่อยที่ล่าช้ากว่าแผน ณ ${MONTHS[curM]} ${YEAR_BE}</div>`;return;}
+  if(!list.length){el.innerHTML=`<div class="lateempty">✓ ไม่มีกิจกรรมที่ล่าช้ากว่าแผน ณ ${MONTHS[curM]} ${YEAR_BE}</div>`;return;}
   let h='<ul class="latelist">';
   for(const it of list){
     const meta=it.kind==='over'
       ? `ครบกำหนด ${MONTHS[it.due]} · เลยมา ${it.over} เดือน · ผลจริง ${it.v}%`
       : `เป้า ${it.t}% · ผลจริง ${it.v}% · ต่ำกว่าเป้า ${it.beh} จุด`;
-    h+=`<li><span class="lt-name">${it.s.code?it.s.code+' ':''}${it.s.name} <span class="lt-sub">(กิจกรรมที่ ${it.a.code})</span></span><span class="lt-meta">${meta}</span></li>`;
+    h+=`<li><span class="lt-name">${it.s.code?it.s.code+' ':''}${it.s.name} <span class="lt-sub">(แผน ${it.a.section.replace('.','')})</span></span><span class="lt-meta">${meta}</span></li>`;
   }
   el.innerHTML=h+'</ul>';
 }

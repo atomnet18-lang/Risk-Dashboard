@@ -26,7 +26,7 @@ rows=[]; n=0
 for r in range(2,ws.max_row+1):
     rid=ws.cell(r,gi("รหัสกิจกรรม")).value
     if not rid: continue
-    base=[ws.cell(r,gi(k)).value or "" for k in ["รหัสกิจกรรม","แผนหลัก","แผนงานย่อย","กิจกรรมหลัก","ชื่อกิจกรรมย่อย","ผู้รับผิดชอบ"]]
+    base=[ws.cell(r,gi(k)).value or "" for k in ["รหัสกิจกรรม","แผนหลัก","แผนงานย่อย","รหัส","ชื่อกิจกรรม","ผู้รับผิดชอบ"]]
     detail=ws.cell(r,gi("รายละเอียดการดำเนินการ (ล่าสุด)")).value or ""
     issue=ws.cell(r,gi("ปัญหาอุปสรรค")).value or ""
     reporter=ws.cell(r,gi("ผู้รายงาน")).value or (base[5].split("/")[-1].strip() if base[5] else "")

@@ -37,7 +37,7 @@ ctr=Alignment(horizontal="center",vertical="center",wrap_text=True); wrap=Alignm
 title=Font(bold=True,size=13,color=NAVY)
 
 wb=openpyxl.Workbook(); ws=wb.active; ws.title="บันทึกผล"
-HEAD=["รหัสกิจกรรม","แผนหลัก","แผนงานย่อย","กิจกรรมหลัก","ชื่อกิจกรรมย่อย","ผู้รับผิดชอบ"]\
+HEAD=["รหัสกิจกรรม","แผนหลัก","แผนงานย่อย","รหัส","ชื่อกิจกรรม","ผู้รับผิดชอบ"]\
      +[f"เป้า {m}" for m in M]+[f"ผล {m}" for m in M]+["รายละเอียดการดำเนินการ (ล่าสุด)","ปัญหาอุปสรรค","ผู้รายงาน"]
 ws.append(HEAD)
 random.seed(7); CUR=5
@@ -54,7 +54,7 @@ for l in lv:
     detail=f'ดำเนินการ {l["name"][:20]} (ถึง {M[latest]})' if latest>=0 else ""
     issue="ล่าช้ากว่าแผน ติดขั้นตอนอนุมัติ" if (latest>=0 and tg[latest] is not None and (tg[latest]-acells[latest])>=15) else ""
     rep=l["resp"].split("/")[-1].strip() or "-"
-    ws.append([l["id"],l["sec"],l["subplan"],f'{l["parent_code"]} {l["parent_name"]}',l["name"],l["resp"]]+tcells+acells+[detail,issue,rep])
+    ws.append([l["id"],l["sec"],l["subplan"],l["parent_code"],l["name"],l["resp"]]+tcells+acells+[detail,issue,rep])
 # styling
 NC=len(HEAD)
 for c in range(1,NC+1):

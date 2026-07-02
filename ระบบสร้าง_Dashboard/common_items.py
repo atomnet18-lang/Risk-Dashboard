@@ -37,10 +37,7 @@ def build(plan=None):
             except: pass
     acts=[]
     for sc,node,parent in rows:
-        subs=[]
-        for i,t in enumerate(node.get("tasks",[]),1):
-            subs.append({"id":node["id"]+"."+str(i),"code":node["code"]+"."+str(i),
-                         "name":t["name"],"bits":_bits(t.get("sched"))})
+        subs=[]  # ตัดระดับกิจกรรมย่อยออก — ติดตามที่ระดับกิจกรรม (48 หัวข้อ)
         acts.append({
             "id":node["id"],"section":sc,
             "subplan":(parent["code"] if parent else node["code"]),
@@ -65,5 +62,5 @@ def leaves(acts):
                     "parent_code":a["code"],"parent_name":a["name"],"name":s["name"],"resp":a["resp"]})
         else:
             out.append({"id":a["id"],"sec":a["section"],"subplan":a["subplan"],
-                "parent_code":a["code"],"parent_name":a["name"],"name":a["name"]+" (ทั้งกิจกรรม)","resp":a["resp"]})
+                "parent_code":a["code"],"parent_name":a["name"],"name":a["name"],"resp":a["resp"]})
     return out
