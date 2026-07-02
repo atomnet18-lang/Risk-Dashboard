@@ -9,7 +9,7 @@ from common_items import build,leaves,CANON,DONE,DOING,NOT
 HERE=os.path.dirname(os.path.abspath(__file__)); ROOT=os.path.dirname(HERE)
 FORMDIR=os.path.join(ROOT,"ฟอร์ม_SharePoint"); os.makedirs(FORMDIR,exist_ok=True)
 
-M,acts,secs=build(); lv=leaves(acts)
+M,acts,secs,SUBPLANS=build(); lv=leaves(acts)
 
 def ramp(sched,plan):
     """เป้าหมายสะสมรายเดือนของ leaf: ถ้ามี sched ใช้ ramp จากเดือนทำงาน; ไม่งั้นใช้ plan ของกิจกรรม"""

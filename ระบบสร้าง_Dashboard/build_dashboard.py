@@ -9,8 +9,8 @@ TPL=os.path.join(HERE,"template.html"); OUT=os.path.join(ROOT,"index.html")
 DATACSV=os.path.join(ROOT,"data","rm_actual.csv")
 EMBED_SAMPLE = sys.argv[1] if len(sys.argv)>1 else DATACSV
 
-M,acts,sections=build()
-RAW={"year":"2569","year_be":2569,"months":M,"sections":sections,"activities":acts,
+M,acts,sections,SUBPLANS=build()
+RAW={"year":"2569","year_be":2569,"months":M,"sections":sections,"subplans":SUBPLANS,"activities":acts,
      "built":datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}
 
 embed_rows=[]

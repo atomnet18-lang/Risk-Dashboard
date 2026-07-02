@@ -50,7 +50,12 @@ def build(plan=None):
             "subs":subs,
         })
     sections=[{"code":s["code"],"name":s["name"],"plan":[(v if v is not None else None) for v in (s.get("plan") or [None]*12)]} for s in d["sections"]]
-    return M,acts,sections
+    subplan_names={}
+    for sc,node,parent in rows:
+        code=parent["code"] if parent else node["code"]
+        nm=parent["name"] if parent else node["name"]
+        subplan_names.setdefault(code,nm)
+    return M,acts,sections,subplan_names
 
 def leaves(acts):
     """รายการ leaf ที่กรอกผลได้ (กิจกรรมย่อย หรือ กิจกรรมที่ไม่มีย่อย)"""

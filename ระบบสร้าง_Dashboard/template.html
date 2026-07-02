@@ -308,6 +308,7 @@ const MONTHS = RAW.months, YEAR_BE = RAW.year_be;
 const ACTIVITIES = RAW.activities;
 const SECTIONS = RAW.sections;
 const SECNAME={}; SECTIONS.forEach(s=>SECNAME[s.code]=s.name);
+const SUBPLAN=RAW.subplans||{};
 document.getElementById('yrTxt').textContent=RAW.year;
 document.getElementById('yrF').textContent=RAW.year;
 document.getElementById('nF').textContent=ACTIVITIES.length;
@@ -544,18 +545,15 @@ function setAllSecs(open){
 }
 function lastPlanned(bits){let last=-1;for(let i=0;i<12;i++)if(bits[i]==='1')last=i;return last;}
 function lateList(m){
+  const groups={};
+  for(const a of scopeActs()){const k=a.subplan;(groups[k]=groups[k]||{code:a.subplan,section:a.section,acts:[]}).acts.push(a);}
   const out=[];
-  for(const a of scopeActs()){
-    const subs=(a.subs&&a.subs.length)?a.subs:[{id:a.id,code:a.code,name:a.name,bits:'000000000000',_self:true}];
-    for(const s of subs){
-      const v=actualAt(s.id,m);
-      if(s._self){const t=leafTarget(a,s,m); if(t>0&&(v==null||v<t-10))out.push({a,s,kind:'behind',t,v:v||0,beh:Math.round(t-(v||0))}); continue;}
-      const last=lastPlanned(s.bits); if(last<0)continue;
-      if(m>last){ if(v==null||v<100) out.push({a,s,kind:'over',due:last,v:v||0,over:m-last,beh:100-(v||0)}); }
-      else { const t=leafTarget(a,s,m); if(t!=null&&t>0&&(v==null||v<t-10)) out.push({a,s,kind:'behind',t,v:v||0,beh:Math.round(t-(v||0))}); }
-    }
+  for(const k in groups){const g=groups[k];
+    const t=wAvg(g.acts,m,false), v=wAvg(g.acts,m,true);
+    if(t==null||t===0)continue;
+    if(v==null||v<t-10) out.push({code:g.code,section:g.section,name:SUBPLAN[g.code]||'',t:Math.round(t),v:(v==null?0:Math.round(v)),beh:Math.round(t-(v==null?0:v))});
   }
-  out.sort((x,y)=>(y.over||0)-(x.over||0)||(y.beh||0)-(x.beh||0));
+  out.sort((x,y)=>y.beh-x.beh);
   return out;
 }
 function renderLate(){
@@ -563,14 +561,11 @@ function renderLate(){
   card.style.display='';
   const list=lateList(curM);
   document.getElementById('lateCount').textContent=list.length?`(${list.length} รายการ)`:'';
-  document.getElementById('lateDesc').textContent=`รายการที่เลยช่วงเวลาตามแผน (Gantt) แต่ยังไม่ครบ 100% หรือผลจริงต่ำกว่าเป้า ≥10 จุด ณ ${MONTHS[curM]} ${YEAR_BE}${selPlan?' · เฉพาะ '+SECNAME[selPlan]:''}`;
+  document.getElementById('lateDesc').textContent=`แผนงานย่อย (ระดับ 1.1, 2.1, 3.1 …) ที่ผลจริงต่ำกว่าเป้าหมาย ≥10 จุด ณ ${MONTHS[curM]} ${YEAR_BE}${selPlan?' · เฉพาะ '+SECNAME[selPlan]:''}`;
   if(!list.length){el.innerHTML=`<div class="lateempty">✓ ไม่มีกิจกรรมที่ล่าช้ากว่าแผน ณ ${MONTHS[curM]} ${YEAR_BE}</div>`;return;}
   let h='<ul class="latelist">';
   for(const it of list){
-    const meta=it.kind==='over'
-      ? `ครบกำหนด ${MONTHS[it.due]} · เลยมา ${it.over} เดือน · ผลจริง ${it.v}%`
-      : `เป้า ${it.t}% · ผลจริง ${it.v}% · ต่ำกว่าเป้า ${it.beh} จุด`;
-    h+=`<li><span class="lt-name">${it.s.code?it.s.code+' ':''}${it.s.name} <span class="lt-sub">(แผน ${it.a.section.replace('.','')})</span></span><span class="lt-meta">${meta}</span></li>`;
+    h+=`<li><span class="lt-name"><b>${it.code}</b> ${it.name} <span class="lt-sub">(แผน ${it.section.replace('.','')})</span></span><span class="lt-meta">เป้า ${it.t}% · ผลจริง ${it.v}% · ต่ำกว่าเป้า ${it.beh} จุด</span></li>`;
   }
   el.innerHTML=h+'</ul>';
 }

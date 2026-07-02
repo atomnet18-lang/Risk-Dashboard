@@ -9,7 +9,7 @@ from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.utils import get_column_letter as col
 from common_items import build,leaves
 HERE=os.path.dirname(os.path.abspath(__file__)); ROOT=os.path.dirname(HERE)
-M,acts,secs=build(); lv=leaves(acts)
+M,acts,secs,SUBPLANS=build(); lv=leaves(acts)
 info={}
 for a in acts:
     if a["subs"]:

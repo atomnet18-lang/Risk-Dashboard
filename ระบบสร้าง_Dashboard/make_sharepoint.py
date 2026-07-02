@@ -10,7 +10,7 @@ from common_items import build,leaves,CANON,DONE,DOING,NOT
 HERE=os.path.dirname(os.path.abspath(__file__)); ROOT=os.path.dirname(HERE)
 FORMDIR=os.path.join(ROOT,"ฟอร์ม_SharePoint"); os.makedirs(FORMDIR,exist_ok=True)
 
-M,acts,secs=build(); lv=leaves(acts)
+M,acts,secs,SUBPLANS=build(); lv=leaves(acts)
 NAVY="16275C"; HF=Font(color="FFFFFF",bold=True,size=11); HEADF=PatternFill("solid",fgColor=NAVY)
 REF=PatternFill("solid",fgColor="EEF2F7")
 thin=Side(style="thin",color="C7CED6"); B=Border(thin,thin,thin,thin)
