@@ -64,6 +64,16 @@ if "สรุปรายเดือน_กิจกรรม" in wb.sheetnames
 with open(SUMOUT,"w",encoding="utf-8-sig",newline="") as f:
     w=csv.writer(f); w.writerow(["รหัสกิจกรรม","เดือน","สรุปผล"]); w.writerows(srows)
 print(f"✓ เขียน {SUMOUT} | สรุป {len(srows)} รายการ")
+# ----- รายงานประจำเดือน -----
+MONOUT=os.path.join(ROOT,"data","rm_monthly.csv"); mrows=[]
+if "รายงานประจำเดือน" in wb.sheetnames:
+    wsm=wb["รายงานประจำเดือน"]
+    for r in range(2,wsm.max_row+1):
+        mm=wsm.cell(r,1).value; tt=wsm.cell(r,2).value
+        if mm and tt is not None and str(tt).strip()!="": mrows.append([str(mm).strip(),str(tt).strip()])
+with open(MONOUT,"w",encoding="utf-8-sig",newline="") as f:
+    w=csv.writer(f); w.writerow(["เดือน","รายงาน"]); w.writerows(mrows)
+print(f"✓ เขียน {MONOUT} | รายงานเดือน {len(mrows)} รายการ")
 print("rebuild index.html ...")
 subprocess.run([sys.executable, os.path.join(HERE,"build_dashboard.py")], check=True)
 print("เสร็จ — git add -A && git commit && git push")

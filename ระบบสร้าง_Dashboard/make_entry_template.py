@@ -121,6 +121,21 @@ for r in range(2,wss.max_row+1):
 for i,w in enumerate([15,8,42,8]+[40]*12,1): wss.column_dimensions[col(i)].width=w
 wss.freeze_panes="E2"; wss.row_dimensions[1].height=22
 
+# ===== Sheet: รายงานประจำเดือน (ภาพรวมทั้งเดือน 1 ข้อความต่อเดือน) =====
+wsm=wb.create_sheet("รายงานประจำเดือน")
+wsm.append(["เดือน","รายงานภาพรวมประจำเดือน"])
+for mi,m in enumerate(M):
+    txt=f"ภาพรวมการดำเนินงานตามแผนบริหารความเสี่ยงประจำเดือน{m} — (แก้เป็นเนื้อหาสรุปจริง)" if mi<6 else ""
+    wsm.append([m,txt])
+for c in range(1,3):
+    x=wsm.cell(1,c); x.fill=HEADF; x.font=HF; x.alignment=ctr; x.border=B
+for r in range(2,wsm.max_row+1):
+    for c in range(1,3):
+        cell=wsm.cell(r,c); cell.border=B
+        cell.alignment=ctr if c==1 else wrap
+        if c==1: cell.fill=REF
+wsm.column_dimensions["A"].width=10; wsm.column_dimensions["B"].width=95; wsm.row_dimensions[1].height=22
+
 out=os.path.join(ROOT,"บันทึกผลการดำเนินงาน_RM_2569.xlsx")
 wb.save(out)
 print("saved:",os.path.basename(out),"| cols=",NC,"| rows=",len(lv))

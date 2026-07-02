@@ -25,6 +25,10 @@ SUMCSV=os.path.join(ROOT,"data","rm_summary.csv"); sum_rows=[]
 if os.path.exists(SUMCSV):
     with open(SUMCSV,encoding="utf-8-sig") as f: sum_rows=list(csv.reader(f))
 html=html.replace("/*__EMBED_SUMMARY__*/", json.dumps(sum_rows,ensure_ascii=False))
+MONCSV=os.path.join(ROOT,"data","rm_monthly.csv"); mon_rows=[]
+if os.path.exists(MONCSV):
+    with open(MONCSV,encoding="utf-8-sig") as f: mon_rows=list(csv.reader(f))
+html=html.replace("/*__EMBED_MONTHLY__*/", json.dumps(mon_rows,ensure_ascii=False))
 open(OUT,"w",encoding="utf-8").write(html)
 os.makedirs(os.path.join(ROOT,"data"),exist_ok=True)
 nsub=sum(len(a["subs"]) for a in acts)

@@ -90,6 +90,9 @@ select#monthSel{font-family:'Sarabun';font-size:.92rem;font-weight:600;padding:9
 .latelist .lt-sub{color:var(--muted);font-weight:400;font-size:.74rem}
 .latelist .lt-meta{color:var(--red);font-weight:700;white-space:nowrap;font-size:.77rem;text-align:right}
 .lateempty{font-size:.85rem;color:var(--green);background:var(--green-bg);border:1px solid #abefc6;padding:11px 14px;border-radius:8px}
+.monthlybox{font-size:.87rem;line-height:1.75;color:var(--text);background:#fafcff;border:1px solid var(--line);border-radius:8px;padding:13px 15px;min-height:130px;white-space:pre-wrap}
+.monthlybox .mb-empty{color:var(--muted);font-style:italic}
+#monthlyCard h2{color:var(--navy)}
 .grid2{display:grid;grid-template-columns:1.12fr .88fr;gap:20px}
 @media(max-width:980px){.grid2{grid-template-columns:1fr}}
 .chartbox{position:relative;height:330px}
@@ -233,10 +236,17 @@ footer{font-size:.76rem;color:var(--muted);text-align:center;margin-top:30px;lin
     </div>
   </div>
 
-  <div class="card latecard" id="lateCard" style="display:none">
-    <h2>⚠ กิจกรรมย่อยที่ล่าช้ากว่าแผน <span id="lateCount" style="font-size:.8rem;color:var(--red);font-weight:600"></span></h2>
-    <div class="desc" id="lateDesc"></div>
-    <div id="lateBody"></div>
+  <div class="grid2" style="margin-bottom:20px">
+    <div class="card latecard" id="lateCard" style="margin-bottom:0;display:none">
+      <h2>⚠ กิจกรรมย่อยที่ล่าช้ากว่าแผน <span id="lateCount" style="font-size:.8rem;color:var(--red);font-weight:600"></span></h2>
+      <div class="desc" id="lateDesc"></div>
+      <div id="lateBody"></div>
+    </div>
+    <div class="card" id="monthlyCard" style="margin-bottom:0">
+      <h2 id="monthlyTitle">📝 รายงานประจำเดือน</h2>
+      <div class="desc">สรุปภาพรวมการทำงานของทั้งเดือน (เปลี่ยนตามเดือนที่เลือกด้านบน)</div>
+      <div id="monthlyBody" class="monthlybox"></div>
+    </div>
   </div>
 
   <div class="card" id="summCard">
@@ -291,6 +301,7 @@ footer{font-size:.76rem;color:var(--muted);text-align:center;margin-top:30px;lin
 const RAW = /*__RAW__*/;
 const EMBED_ACTUAL = /*__EMBED_ACTUAL__*/;
 const EMBED_SUMMARY = /*__EMBED_SUMMARY__*/;
+const EMBED_MONTHLY = /*__EMBED_MONTHLY__*/;
 const MONTHS = RAW.months, YEAR_BE = RAW.year_be;
 const ACTIVITIES = RAW.activities;
 const SECTIONS = RAW.sections;
@@ -303,6 +314,7 @@ document.getElementById('actCount').textContent=ACTIVITIES.length;
 /* ============ ผลงานจริง ============ */
 let ACTUAL={};   // ACTUAL[id][m]={v,d,st,issue,reporter,date}
 let SUMMARY={};   // SUMMARY[activityId][m]=ข้อความสรุป
+let MONTHLY={};   // MONTHLY[m]=รายงานภาพรวมทั้งเดือน
 const THM={'ม.ค.':1,'ก.พ.':2,'มี.ค.':3,'เม.ย.':4,'พ.ค.':5,'มิ.ย.':6,'ก.ค.':7,'ส.ค.':8,'ก.ย.':9,'ต.ค.':10,'พ.ย.':11,'ธ.ค.':12};
 function parseCSV(t){const rows=[];let row=[],cur='',q=false;
   for(let i=0;i<t.length;i++){const ch=t[i];
@@ -587,7 +599,10 @@ function renderSummary(){
   }
   el.innerHTML=h;
 }
-function renderAll(){renderPlanBoxes();renderKPIs();renderScurve();renderSecBar();renderLate();renderSummary();renderTable();}
+function renderMonthly(){const el=document.getElementById('monthlyBody');if(!el)return;
+  document.getElementById('monthlyTitle').textContent=`📝 รายงานประจำเดือน ${MONTHS[curM]} ${YEAR_BE}`;
+  const t=MONTHLY[curM]; el.innerHTML=t?esc(t):'<span class="mb-empty">— ยังไม่มีรายงานประจำเดือนนี้ —</span>';}
+function renderAll(){renderPlanBoxes();renderKPIs();renderScurve();renderSecBar();renderLate();renderMonthly();renderSummary();renderTable();}
 
 /* ============ popup ============ */
 const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');
@@ -627,6 +642,13 @@ function loadSummaryRows(rows){SUMMARY={}; if(!rows||rows.length<2)return;
   if(iId<0||iM<0||iS<0)return;
   for(let r=1;r<rows.length;r++){const c=rows[r];const id=(c[iId]||'').trim();if(!id)continue;let m=(c[iM]||'').trim();m=THM[m]||parseInt(m);if(!m||m<1||m>12)continue;const txt=(c[iS]||'').trim();if(!txt)continue;SUMMARY[id]=SUMMARY[id]||{};SUMMARY[id][m-1]=txt;}
 }
+function loadMonthlyRows(rows){MONTHLY={}; if(!rows||rows.length<2)return;
+  const h=rows[0].map(x=>(x||'').replace(/^﻿/,'').trim().toLowerCase());
+  const idx=ns=>h.findIndex(c=>ns.some(n=>c.includes(n)));
+  const iM=idx(['เดือน','month']),iR=idx(['รายงาน','report']);
+  if(iM<0||iR<0)return;
+  for(let r=1;r<rows.length;r++){const c=rows[r];let m=(c[iM]||'').trim();m=THM[m]||parseInt(m);if(!m||m<1||m>12)continue;const txt=(c[iR]||'').trim();if(txt)MONTHLY[m-1]=txt;}
+}
 function useEmbed(){hasActual=loadActualRows(EMBED_ACTUAL);
   document.getElementById('srcInfo').textContent=hasActual?'แหล่งข้อมูล: แผน RM 2569 + ผลงานจริง (ตัวอย่างฝังในไฟล์)':'แหล่งข้อมูล: แผนปฏิบัติการบริหารความเสี่ยง';}
 const pAct=fetch('data/rm_actual.csv',{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.text();})
@@ -636,7 +658,10 @@ const pAct=fetch('data/rm_actual.csv',{cache:'no-store'}).then(r=>{if(!r.ok)thro
 const pSum=fetch('data/rm_summary.csv',{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.text();})
  .then(t=>loadSummaryRows(parseCSV(t.replace(/^﻿/,''))))
  .catch(()=>loadSummaryRows(EMBED_SUMMARY));
-Promise.all([pAct,pSum]).finally(init);
+const pMon=fetch('data/rm_monthly.csv',{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.text();})
+ .then(t=>loadMonthlyRows(parseCSV(t.replace(/^﻿/,''))))
+ .catch(()=>loadMonthlyRows(EMBED_MONTHLY));
+Promise.all([pAct,pSum,pMon]).finally(init);
 </script>
 </body>
 </html>
