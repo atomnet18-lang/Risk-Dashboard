@@ -261,25 +261,6 @@ footer code{color:var(--text);background:var(--card2);padding:2px 8px;border-rad
     </div>
   </div>
 
-  <div class="grid2" style="margin-bottom:20px">
-    <div class="card latecard" id="lateCard" style="margin-bottom:0;display:none">
-      <h2>⚠ กิจกรรมที่ล่าช้ากว่าแผน <span id="lateCount" style="font-size:.8rem;color:var(--red);font-weight:600"></span></h2>
-      <div class="desc" id="lateDesc"></div>
-      <div id="lateBody"></div>
-    </div>
-    <div class="card" id="monthlyCard" style="margin-bottom:0">
-      <h2 id="monthlyTitle">📝 รายงานประจำเดือน</h2>
-      <div class="desc">สรุปภาพรวมการทำงานของทั้งเดือน (เปลี่ยนตามเดือนที่เลือกด้านบน)</div>
-      <div id="monthlyBody" class="monthlybox"></div>
-    </div>
-  </div>
-
-  <div class="card" id="summCard">
-    <h2>📋 สรุปผลรายเดือน <span id="summCount" style="font-size:.8rem;color:var(--blue);font-weight:600"></span></h2>
-    <div class="desc" id="summDesc"></div>
-    <div id="summBody"></div>
-  </div>
-
   <div class="card">
     <h2>รายละเอียดกิจกรรม/มาตรการตามแผนปฏิบัติการ (<span id="actCount"></span> รายการ)</h2>
     <div class="desc" style="display:flex;align-items:center;flex-wrap:wrap;gap:4px">
@@ -617,7 +598,7 @@ function renderSummary(){
 function renderMonthly(){const el=document.getElementById('monthlyBody');if(!el)return;
   document.getElementById('monthlyTitle').textContent=`📝 รายงานประจำเดือน ${MONTHS[curM]} ${YEAR_BE}`;
   const t=MONTHLY[curM]; el.innerHTML=t?esc(t):'<span class="mb-empty">— ยังไม่มีรายงานประจำเดือนนี้ —</span>';}
-function renderAll(){renderPlanBoxes();renderKPIs();renderScurve();renderSecBar();renderLate();renderMonthly();renderSummary();renderTable();}
+function renderAll(){renderPlanBoxes();renderKPIs();renderScurve();renderSecBar();renderTable();}
 
 /* ============ popup ============ */
 const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');
