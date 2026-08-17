@@ -306,7 +306,6 @@ footer code{color:var(--text);background:var(--card);padding:1px 6px;border-radi
 <div class="wrap">
   <div class="planboxes" id="planBoxes"></div>
   <div class="planhint" id="planHint"></div>
-  <div class="kpis" id="kpis"></div>
 
   <div class="grid2">
     <div class="card">
@@ -477,32 +476,6 @@ function renderPlanBoxes(){
     : 'เลือกแผนหลักได้ที่กล่องด้านบน (คลิกเพื่อดูเฉพาะแผนนั้น · คลิกซ้ำเพื่อกลับมาดูทุกแผน)';
 }
 
-/* ============ KPI ============ */
-function renderKPIs(){
-  const SA=scopeActs(), SL=scopeLeaves();
-  const t=(selPlan?secTargetAt(selPlan,curM):overallSecTarget(curM))||0, v=overall(SA,curM,true);
-  const d=v==null?null:v-t;
-  let g=0,a=0,r=0,n=0,wd=0,wg=0,wn=0;
-  SA.forEach(x=>{const s=status(x,curM); if(s.cls==='g')g++;else if(s.cls==='a')a++;else if(s.cls==='r')r++;else n++;});
-  SL.forEach(id=>{const w=lastInfo(id,curM,'st'); if(w===DONE)wd++;else if(w===DOING)wg++;else wn++;});
-  const dCls=d==null?'':(d>=0?'good':(d>-5?'warn':'bad')); const dTxt=d==null?'–':((d>=0?'+':'')+fmt(d));
-  document.getElementById('kpis').innerHTML=`
-   <div class="kpi" style="--accent:var(--lavender)"><div class="lbl">เป้าหมายสะสม ณ ${MONTHS[curM]} ${YEAR_BE}</div>
-     <div class="val">${fmt(t)}<small> %</small></div><div class="sub">จากเป้าหมายทั้งปี 100%</div></div>
-   <div class="kpi" style="--accent:var(--blue)"><div class="lbl">ผลงานสะสม (ถ่วงน้ำหนัก)</div>
-     <div class="val">${fmt(v)}<small> %</small></div><div class="sub">${v==null?'ยังไม่มีข้อมูลผลงานจริง':'จากรายงานผลการดำเนินงาน'}</div></div>
-   <div class="kpi" style="--accent:${d==null?'var(--muted)':d>=0?'var(--green)':(d>-5?'var(--amber)':'var(--red)')}"><div class="lbl">ผลต่าง (ผลงาน − เป้าหมาย)</div>
-     <div class="val">${dTxt}<small>${d==null?'':' จุด'}</small></div><div class="sub">${d==null?'รอข้อมูลผลงาน':d>=0?'เป็นไปตามแผน':'ต่ำกว่าเป้าหมาย'}</div></div>
-   <div class="kpi" style="--accent:var(--green)"><div class="lbl">สถานะเทียบแผน (${SA.length} กิจกรรม)</div>
-     <div class="val" style="font-size:1.2rem;display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
-       <span class="chip g">✓ ${g}</span><span class="chip a">! ${a}</span><span class="chip r">✕ ${r}</span><span class="chip n">○ ${n}</span></div>
-     <div class="sub" style="margin-top:6px">ตามแผน · ล่าช้าเล็กน้อย · ล่าช้า · ยังไม่ถึงกำหนด/รอผล</div></div>
-   <div class="kpi" style="--accent:var(--orange)"><div class="lbl">สถานะงาน (${SL.length} กิจกรรม)</div>
-     <div class="val" style="font-size:1.2rem;display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
-       <span class="chip g">✓ ${wd}</span><span class="chip b">⟳ ${wg}</span><span class="chip n">○ ${wn}</span></div>
-     <div class="sub" style="margin-top:6px">เสร็จสิ้น · อยู่ระหว่างดำเนินการ · ยังไม่ดำเนินการ/ไม่ระบุ</div></div>`;
-}
-
 /* ============ Charts ============ */
 const F={family:'Sarabun'};
 function chartPalette(){
@@ -671,7 +644,7 @@ function renderSummary(){
 function renderMonthly(){const el=document.getElementById('monthlyBody');if(!el)return;
   document.getElementById('monthlyTitle').textContent=`📝 รายงานประจำเดือน ${MONTHS[curM]} ${YEAR_BE}`;
   const t=MONTHLY[curM]; el.innerHTML=t?esc(t):'<span class="mb-empty">— ยังไม่มีรายงานประจำเดือนนี้ —</span>';}
-function renderAll(){renderPlanBoxes();renderKPIs();renderScurve();renderSecBar();renderTable();}
+function renderAll(){renderPlanBoxes();renderScurve();renderSecBar();renderTable();}
 
 /* ============ popup ============ */
 const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');
