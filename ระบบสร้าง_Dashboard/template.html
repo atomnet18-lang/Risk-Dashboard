@@ -9,10 +9,23 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root{
-  --bg:#0e0c1f; --card:rgba(255,255,255,.10); --card2:rgba(255,255,255,.07); --card3:rgba(255,255,255,.14);
-  --line:rgba(255,255,255,.28); --line-soft:rgba(255,255,255,.16);
+  --bg:#0e0c1f;
   --text:#f4f2fb; --muted:#c3bfdd;
   --navy:var(--text); --navy2:var(--accent);
+  --card:rgba(255,255,255,.10); --card2:rgba(255,255,255,.07); --card3:rgba(255,255,255,.14);
+  --line:rgba(255,255,255,.28); --line-soft:rgba(255,255,255,.16); --line-strong:rgba(255,255,255,.4); --line-active:rgba(255,255,255,.55); --ring-active:rgba(255,255,255,.3);
+  --panel-a:rgba(255,255,255,.04); --panel-b:rgba(255,255,255,.05); --panel-c:rgba(255,255,255,.06);
+  --panel-d:rgba(255,255,255,.08); --panel-e:rgba(255,255,255,.12); --panel-f:rgba(255,255,255,.16);
+  --panel-g:rgba(255,255,255,.18); --panel-h:rgba(255,255,255,.20); --panel-i:rgba(255,255,255,.22);
+  --on-glass:#fff; --dot-ring:rgba(20,18,40,.9);
+  --modal-bg:rgba(30,26,55,.55); --modal-overlay:rgba(6,4,18,.55);
+  --solid-fallback:#1c1a30;
+  --page-grad:
+    radial-gradient(at 12% 18%, rgba(255,99,196,.55), transparent 55%),
+    radial-gradient(at 85% 12%, rgba(94,140,255,.55), transparent 55%),
+    radial-gradient(at 50% 90%, rgba(94,255,209,.40), transparent 55%),
+    radial-gradient(at 92% 82%, rgba(174,94,255,.50), transparent 55%),
+    linear-gradient(135deg,#1c0f45 0%,#122a5e 45%,#0c5c56 100%);
   --accent:#5be8c4; --accent-dark:#2fbd99; --accent-soft:rgba(91,232,196,.20);
   --orange:#ffd166; --orange-soft:rgba(255,209,102,.20);
   --green:#5be8c4; --green-bg:rgba(91,232,196,.20);
@@ -26,41 +39,77 @@
   --shadow-sm:0 8px 22px rgba(6,4,20,.32);
   --focus:0 0 0 3px rgba(91,232,196,.55), 0 0 18px rgba(91,232,196,.35);
 }
+:root[data-theme="light"]{
+  --bg:#eef1fb;
+  --text:#211c36; --muted:#655f83;
+  --card:rgba(255,255,255,.50); --card2:rgba(255,255,255,.36); --card3:rgba(255,255,255,.62);
+  --line:rgba(110,100,170,.28); --line-soft:rgba(110,100,170,.16); --line-strong:rgba(110,100,170,.42); --line-active:rgba(110,100,170,.6); --ring-active:rgba(110,100,170,.28);
+  --panel-a:rgba(255,255,255,.28); --panel-b:rgba(255,255,255,.34); --panel-c:rgba(255,255,255,.40);
+  --panel-d:rgba(255,255,255,.46); --panel-e:rgba(255,255,255,.54); --panel-f:rgba(255,255,255,.62);
+  --panel-g:rgba(255,255,255,.68); --panel-h:rgba(255,255,255,.74); --panel-i:rgba(110,100,170,.26);
+  --on-glass:#211c36; --dot-ring:rgba(255,255,255,.95);
+  --modal-bg:rgba(255,255,255,.66); --modal-overlay:rgba(40,32,72,.35);
+  --solid-fallback:#f3f1fb;
+  --page-grad:
+    radial-gradient(at 12% 18%, rgba(255,182,224,.60), transparent 55%),
+    radial-gradient(at 85% 12%, rgba(173,205,255,.60), transparent 55%),
+    radial-gradient(at 50% 90%, rgba(173,255,225,.50), transparent 55%),
+    radial-gradient(at 92% 82%, rgba(214,183,255,.55), transparent 55%),
+    linear-gradient(135deg,#eef1fb 0%,#e3ecff 45%,#e2f7f0 100%);
+  --accent:#0f9a76; --accent-dark:#0b7d5f; --accent-soft:rgba(15,154,118,.16);
+  --orange:#a3690a; --orange-soft:rgba(163,105,10,.16);
+  --green:#0f9a76; --green-bg:rgba(15,154,118,.16);
+  --amber:#a3690a; --amber-bg:rgba(163,105,10,.16);
+  --red:#c23b2e; --red-bg:rgba(194,59,46,.16);
+  --blue:#1f6fb8; --blue-bg:rgba(31,111,184,.16);
+  --lavender:#6a4fd6; --lavender-bg:rgba(106,79,214,.16);
+  --scrim:rgba(255,255,255,.30);
+  --shadow:0 18px 40px rgba(60,45,120,.16);
+  --shadow-sm:0 8px 20px rgba(60,45,120,.13);
+  --focus:0 0 0 3px rgba(15,154,118,.5), 0 0 18px rgba(15,154,118,.3);
+}
 *{box-sizing:border-box;margin:0;padding:0}
-html{background:#0e0c1f}
+html{background:var(--bg)}
 body{
   font-family:'Sarabun',sans-serif;color:var(--text);font-size:15px;-webkit-font-smoothing:antialiased;
-  background:
-    radial-gradient(at 12% 18%, rgba(255,99,196,.55), transparent 55%),
-    radial-gradient(at 85% 12%, rgba(94,140,255,.55), transparent 55%),
-    radial-gradient(at 50% 90%, rgba(94,255,209,.40), transparent 55%),
-    radial-gradient(at 92% 82%, rgba(174,94,255,.50), transparent 55%),
-    linear-gradient(135deg,#1c0f45 0%,#122a5e 45%,#0c5c56 100%);
-  background-attachment:fixed;background-color:#0e0c1f;
+  background:var(--page-grad);
+  background-attachment:fixed;background-color:var(--bg);
+  transition:color .25s;
 }
 .wrap{max-width:1320px;margin:0 auto;padding:0 24px 56px}
 @media(prefers-reduced-transparency:reduce){
-  .card,.kpi,.planbox,header,.modal,select#monthSel,.btn-sm,.md-close{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:#1c1a30!important}
+  .card,.kpi,.planbox,header,.modal,select#monthSel,.btn-sm,.md-close,.theme-toggle{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:var(--solid-fallback)!important}
 }
 @media(prefers-reduced-motion:reduce){
-  .planbox,.btn-sm,.md-close,select#monthSel,table.acts tr.main,.mv{transition:none!important}
-  .planbox:hover{transform:none!important}
+  .planbox,.btn-sm,.md-close,select#monthSel,table.acts tr.main,.mv,.theme-toggle,.theme-toggle svg,body{transition:none!important}
+  .planbox:hover,.theme-toggle:hover,.theme-toggle:active{transform:none!important}
 }
 button,select,[tabindex]{outline:none}
 button:focus-visible,select:focus-visible,.planbox:focus-visible,a:focus-visible,[tabindex]:focus-visible{box-shadow:var(--focus)!important}
 
+/* Theme toggle -- mac-style round glass button, sun/moon crossfade */
+.theme-toggle{position:relative;width:38px;height:38px;border-radius:50%;flex:none;background:var(--card3);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--shadow-sm);transition:background .15s,transform .15s,border-color .15s}
+.theme-toggle:hover{background:var(--panel-h);transform:scale(1.06)}
+.theme-toggle:active{transform:scale(.92)}
+.theme-toggle svg{width:18px;height:18px;position:absolute;transition:opacity .25s,transform .35s}
+.theme-toggle .icon-sun{color:#ffd166;opacity:0;transform:rotate(80deg) scale(.4)}
+.theme-toggle .icon-moon{color:#c2b2ff;opacity:1;transform:rotate(0deg) scale(1)}
+[data-theme="light"] .theme-toggle .icon-sun{opacity:1;transform:rotate(0deg) scale(1)}
+[data-theme="light"] .theme-toggle .icon-moon{opacity:0;transform:rotate(-80deg) scale(.4)}
+
 /* Header */
-header{background:rgba(255,255,255,.10);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-bottom:1px solid var(--line);border-radius:0 0 26px 26px;color:#fff;padding:26px 0 30px;box-shadow:var(--shadow)}
+header{background:var(--card);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-bottom:1px solid var(--line);border-radius:0 0 26px 26px;color:var(--on-glass);padding:26px 0 30px;box-shadow:var(--shadow)}
 .hrow{max-width:1320px;margin:0 auto;padding:0 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
-.htitle h1{font-size:1.4rem;font-weight:700;letter-spacing:.2px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.25)}
+.htitle h1{font-size:1.4rem;font-weight:700;letter-spacing:.2px;color:var(--on-glass)}
 .htitle p{font-size:.9rem;opacity:.82;margin-top:4px;font-weight:300;letter-spacing:.3px}
 .dept{font-size:.95rem;font-weight:700;color:var(--accent);letter-spacing:.5px;margin-bottom:3px}
-.badge-iso{display:inline-block;background:rgba(255,255,255,.14);border:1px solid var(--line);color:#fff;font-size:.72rem;padding:4px 15px;border-radius:999px;margin-top:10px;font-weight:600;letter-spacing:1.1px}
+.badge-iso{display:inline-block;background:var(--card3);border:1px solid var(--line);color:var(--on-glass);font-size:.72rem;padding:4px 15px;border-radius:999px;margin-top:10px;font-weight:600;letter-spacing:1.1px}
 .hbrand{display:flex;align-items:center;gap:18px}
-.hlogo{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.9);padding:5px;box-shadow:var(--shadow-sm);flex:none;object-fit:contain}
+.hlogo{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.92);padding:5px;box-shadow:var(--shadow-sm);flex:none;object-fit:contain}
+.hctrl{display:flex;align-items:flex-end;gap:12px}
 .hctrl label{font-size:.8rem;opacity:.8;letter-spacing:.3px}
-select#monthSel{font-family:'Sarabun';font-size:.92rem;font-weight:600;padding:9px 16px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.14);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);color:#fff;cursor:pointer;box-shadow:var(--shadow-sm);transition:background .15s,border-color .15s}
-select#monthSel:hover{background:rgba(255,255,255,.20);border-color:rgba(255,255,255,.4)}
+select#monthSel{font-family:'Sarabun';font-size:.92rem;font-weight:600;padding:9px 16px;border-radius:14px;border:1px solid var(--line);background:var(--card3);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);color:var(--on-glass);cursor:pointer;box-shadow:var(--shadow-sm);transition:background .15s,border-color .15s}
+select#monthSel:hover{background:var(--panel-h);border-color:var(--line-strong)}
 .asof{font-size:.74rem;opacity:.75;text-align:right;margin-top:8px;letter-spacing:.2px}
 
 /* KPI */
@@ -79,7 +128,7 @@ select#monthSel:hover{background:rgba(255,255,255,.20);border-color:rgba(255,255
 .planbox{background:var(--card);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:1px solid var(--line);border-radius:20px;padding:15px 17px;box-shadow:var(--shadow-sm);cursor:pointer;transition:transform .15s,box-shadow .15s,border-color .15s;position:relative;overflow:hidden}
 .planbox::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--accent,var(--accent));box-shadow:0 0 12px var(--accent)}
 .planbox:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
-.planbox.active{border-color:rgba(255,255,255,.55);background:rgba(255,255,255,.16);box-shadow:var(--shadow),0 0 0 1px rgba(255,255,255,.3)}
+.planbox.active{border-color:var(--line-active);background:var(--panel-f);box-shadow:var(--shadow),0 0 0 1px var(--ring-active)}
 .planbox.dim{opacity:.55}
 .planbox .pbtag{font-size:.72rem;font-weight:700;color:var(--blue);letter-spacing:.4px}
 .planbox .pbname{font-size:.82rem;color:var(--text);font-weight:600;margin-top:3px;line-height:1.35;height:2.5em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -87,9 +136,9 @@ select#monthSel:hover{background:rgba(255,255,255,.20);border-color:rgba(255,255
 .planbox .pbnum b{font-size:1.7rem;font-weight:800;color:var(--text)}
 .planbox .pbnum small{font-size:.76rem;color:var(--muted)}
 .planbox .pbnum .chip{margin-left:auto}
-.planbox .track{height:8px;border-radius:999px;background:rgba(255,255,255,.14);margin-top:9px;position:relative;overflow:hidden}
+.planbox .track{height:8px;border-radius:999px;background:var(--card3);margin-top:9px;position:relative;overflow:hidden}
 .planbox .track .fill{height:100%;border-radius:999px}
-.planbox .track .tmark{position:absolute;top:-3px;width:2px;height:14px;background:#fff;opacity:.7}
+.planbox .track .tmark{position:absolute;top:-3px;width:2px;height:14px;background:var(--on-glass);opacity:.7}
 .planbox .pbmeta{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-top:9px}
 .planhint{font-size:.76rem;color:var(--muted);margin:6px 0 14px}
 .planhint b{color:var(--text)}
@@ -100,8 +149,8 @@ select#monthSel:hover{background:rgba(255,255,255,.20);border-color:rgba(255,255
 .card h2::before{content:'';width:4px;height:16px;border-radius:2px;background:var(--accent);box-shadow:0 0 10px var(--accent);display:inline-block}
 .card .desc{font-size:.78rem;color:var(--muted);margin-bottom:14px}
 .latecard{border-color:rgba(255,143,135,.4)}
-.actsumm{background:var(--blue-bg);border:1px solid rgba(120,201,255,.35);border-radius:14px;padding:10px 14px;margin-bottom:12px;font-size:.85rem;color:#dcf0ff;line-height:1.55}
-.actsumm .as-h{font-weight:700;color:#fff;display:block;margin-bottom:2px}
+.actsumm{background:var(--blue-bg);border:1px solid rgba(120,201,255,.35);border-radius:14px;padding:10px 14px;margin-bottom:12px;font-size:.85rem;color:var(--blue);line-height:1.55}
+.actsumm .as-h{font-weight:700;color:var(--on-glass);display:block;margin-bottom:2px}
 .sumico{cursor:pointer;font-size:.9rem;margin-left:5px;vertical-align:middle}
 #summBody{max-height:440px;overflow:auto}
 .summsec{font-weight:700;color:var(--text);font-size:.82rem;margin:14px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--line-soft)}
@@ -113,7 +162,7 @@ select#monthSel:hover{background:rgba(255,255,255,.20);border-color:rgba(255,255
 .sumtbl{width:100%;border-collapse:collapse;font-size:.85rem}
 .sumtbl td{padding:8px 10px;border-bottom:1px solid var(--line-soft);vertical-align:top;color:var(--text)}
 .sumtbl td.mcell{font-weight:700;color:var(--accent);white-space:nowrap;width:56px}
-.sumtbl tr.curm{background:rgba(255,255,255,.08)}
+.sumtbl tr.curm{background:var(--panel-d)}
 .sumtbl .empty{color:var(--muted);font-style:italic}
 .latelist{list-style:none;margin:8px 0 0;padding:0}
 .latelist li{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:10px 14px;border:1px solid rgba(255,143,135,.4);background:var(--red-bg);border-radius:14px;margin-bottom:8px;font-size:.83rem}
@@ -121,7 +170,7 @@ select#monthSel:hover{background:rgba(255,255,255,.20);border-color:rgba(255,255
 .latelist .lt-sub{color:var(--muted);font-weight:400;font-size:.74rem}
 .latelist .lt-meta{color:var(--red);font-weight:700;white-space:nowrap;font-size:.77rem;text-align:right}
 .lateempty{font-size:.85rem;color:var(--green);background:var(--green-bg);border:1px solid rgba(91,232,196,.4);padding:11px 14px;border-radius:14px}
-.monthlybox{font-size:.87rem;line-height:1.75;color:var(--text);background:rgba(255,255,255,.06);border:1px solid var(--line-soft);border-radius:14px;padding:13px 15px;min-height:130px;white-space:pre-wrap}
+.monthlybox{font-size:.87rem;line-height:1.75;color:var(--text);background:var(--panel-c);border:1px solid var(--line-soft);border-radius:14px;padding:13px 15px;min-height:130px;white-space:pre-wrap}
 .monthlybox .mb-empty{color:var(--muted);font-style:italic}
 #monthlyCard h2{color:var(--text)}
 .grid2{display:grid;grid-template-columns:1.12fr .88fr;gap:20px}
@@ -131,28 +180,28 @@ select#monthSel:hover{background:rgba(255,255,255,.20);border-color:rgba(255,255
 
 /* Table */
 table.acts{width:100%;border-collapse:collapse;font-size:.88rem}
-table.acts th{background:rgba(255,255,255,.06);color:var(--muted);font-weight:600;padding:11px 12px;text-align:center;font-size:.78rem;position:sticky;top:0;letter-spacing:.3px;border-bottom:1px solid var(--line)}
+table.acts th{background:var(--panel-c);color:var(--muted);font-weight:600;padding:11px 12px;text-align:center;font-size:.78rem;position:sticky;top:0;letter-spacing:.3px;border-bottom:1px solid var(--line)}
 table.acts th:first-child{border-radius:14px 0 0 0;text-align:left}
 table.acts th:last-child{border-radius:0 14px 0 0}
 table.acts td{padding:11px 12px;border-bottom:1px solid var(--line-soft);vertical-align:middle;text-align:center;color:var(--text)}
 table.acts td.name{text-align:left;font-weight:500;max-width:430px}
 tr.secrow{cursor:pointer}
-tr.secrow td{background:rgba(255,255,255,.10);font-weight:700;color:#fff;text-align:left;font-size:.9rem;letter-spacing:.2px;border-left:3px solid var(--accent)}
-tr.secrow:hover td{background:rgba(255,255,255,.16)}
+tr.secrow td{background:var(--card);font-weight:700;color:var(--on-glass);text-align:left;font-size:.9rem;letter-spacing:.2px;border-left:3px solid var(--accent)}
+tr.secrow:hover td{background:var(--panel-f)}
 .seccaret{display:inline-block;width:16px;color:var(--accent);font-size:.7rem;transition:transform .2s;margin-right:4px}
 tr.secrow.open .seccaret{transform:rotate(90deg)}
 .seccount{font-weight:500;color:var(--muted);font-size:.78rem;margin-left:10px}
-.seckpi{float:right;font-weight:600;color:var(--text);font-size:.8rem;background:rgba(255,255,255,.12);border:1px solid var(--line-soft);border-radius:999px;padding:2px 12px}
+.seckpi{float:right;font-weight:600;color:var(--text);font-size:.8rem;background:var(--panel-e);border:1px solid var(--line-soft);border-radius:999px;padding:2px 12px}
 .seckpi b{color:var(--accent)}
-.btn-sm{font-family:'Sarabun';font-size:.76rem;font-weight:600;background:rgba(255,255,255,.10);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:6px 14px;cursor:pointer;margin-left:8px;transition:background .15s,border-color .15s}
-.btn-sm:hover{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.45)}
+.btn-sm{font-family:'Sarabun';font-size:.76rem;font-weight:600;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:6px 14px;cursor:pointer;margin-left:8px;transition:background .15s,border-color .15s}
+.btn-sm:hover{background:var(--panel-g);border-color:var(--line-strong)}
 table.acts tr.main{cursor:pointer;transition:background .15s}
-table.acts tr.main:hover{background:rgba(255,255,255,.06)}
+table.acts tr.main:hover{background:var(--panel-c)}
 .caret{display:inline-block;width:18px;height:18px;line-height:18px;text-align:center;border-radius:6px;background:var(--blue-bg);color:var(--blue);font-size:.68rem;margin-right:9px;transition:transform .2s;flex:none}
 tr.open .caret{transform:rotate(90deg)}
 .nm{display:flex;align-items:flex-start}
 .outp{font-size:.73rem;color:var(--muted);margin-top:3px;font-weight:400}
-.pbar{background:rgba(255,255,255,.10);border-radius:999px;height:8px;width:110px;margin:0 auto;overflow:hidden}
+.pbar{background:var(--card);border-radius:999px;height:8px;width:110px;margin:0 auto;overflow:hidden}
 .pbar i{display:block;height:100%;border-radius:999px;background:var(--accent)}
 .pcell{display:flex;flex-direction:column;align-items:center;gap:4px}
 .pcell span{font-size:.76rem;font-weight:600;color:var(--muted)}
@@ -162,31 +211,31 @@ tr.open .caret{transform:rotate(90deg)}
 .chip.g{background:var(--green-bg);color:var(--green);border-color:rgba(91,232,196,.4)}
 .chip.a{background:var(--amber-bg);color:var(--amber);border-color:rgba(255,209,102,.4)}
 .chip.r{background:var(--red-bg);color:var(--red);border-color:rgba(255,143,135,.4)}
-.chip.n{background:rgba(255,255,255,.10);color:var(--muted);border-color:var(--line-soft)}
+.chip.n{background:var(--card);color:var(--muted);border-color:var(--line-soft)}
 .chip.b{background:var(--blue-bg);color:var(--blue);border-color:rgba(120,201,255,.4)}
-.wchip{background:rgba(255,255,255,.12);color:var(--text);font-weight:700;border-radius:999px;padding:3px 9px;font-size:.78rem;border:1px solid var(--line-soft)}
+.wchip{background:var(--panel-e);color:var(--text);font-weight:700;border-radius:999px;padding:3px 9px;font-size:.78rem;border:1px solid var(--line-soft)}
 
 /* Sub rows / Gantt */
-tr.sub td{background:rgba(255,255,255,.04);padding:0}
+tr.sub td{background:var(--panel-a);padding:0}
 .sthead{display:grid;grid-template-columns:1.45fr 250px 1.05fr;gap:14px;font-size:.7rem;color:var(--muted);font-weight:700;padding:2px 0 6px;border-bottom:1px solid var(--line-soft)}
 .strow{display:grid;grid-template-columns:1.45fr 250px 1.05fr;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line-soft)}
 .strow .sname{font-size:.82rem;line-height:1.45;color:var(--text)}
 .strow .sname .chip{font-size:.66rem;margin-left:4px;vertical-align:middle}
-.strow.rownow{background:rgba(255,209,102,.10);border-radius:10px}
+.strow.rownow{background:var(--orange-soft);border-radius:10px}
 .mvlink{cursor:pointer;color:var(--blue);font-weight:600}
 .cmpbar{display:flex;flex-direction:column;gap:5px}
 .cbrow{display:flex;align-items:center;gap:7px}
 .cblabel{font-size:.66rem;color:var(--muted);width:26px;flex:none;text-align:right;font-weight:600}
-.cbtrack{flex:1;height:11px;border-radius:999px;background:rgba(255,255,255,.10);overflow:hidden}
+.cbtrack{flex:1;height:11px;border-radius:999px;background:var(--card);overflow:hidden}
 .cbfill{height:100%;border-radius:999px;transition:.25s}
 .cbfill.tgt{background:var(--orange)}
 .cbval{font-size:.69rem;font-weight:700;width:40px;flex:none;text-align:right}
 .smonths{display:flex;gap:2px}
-.smonths i{flex:1;max-width:16px;height:16px;border-radius:5px;background:rgba(255,255,255,.10);display:inline-block;position:relative}
-.smonths i.pl{background:rgba(255,255,255,.22)}
+.smonths i{flex:1;max-width:16px;height:16px;border-radius:5px;background:var(--card);display:inline-block;position:relative}
+.smonths i.pl{background:var(--panel-i)}
 .smonths i.now{outline:2px solid var(--orange);outline-offset:-1px}
 .smonths i.hasrep{cursor:pointer}
-.smonths i.hasrep::after{content:'';position:absolute;top:-3px;right:-2px;width:7px;height:7px;border-radius:50%;background:var(--orange);border:1.5px solid rgba(20,18,40,.9)}
+.smonths i.hasrep::after{content:'';position:absolute;top:-3px;right:-2px;width:7px;height:7px;border-radius:50%;background:var(--orange);border:1.5px solid var(--dot-ring)}
 @keyframes pulseTgt{0%{box-shadow:0 0 0 0 rgba(255,209,102,.9)}70%,100%{box-shadow:0 0 0 6px rgba(255,209,102,0)}}
 @keyframes pulseAct{0%{box-shadow:0 0 0 0 rgba(255,209,102,.9)}70%,100%{box-shadow:0 0 0 5px rgba(255,209,102,0)}}
 .smonths i.tgtdot{outline:2px solid var(--orange);outline-offset:1px;animation:pulseTgt 1.4s infinite}
@@ -199,35 +248,35 @@ table.gantt{width:100%;border-collapse:collapse;font-size:.8rem}
 table.gantt th{font-size:.67rem;color:var(--muted);font-weight:600;padding:4px 2px;text-align:center;background:transparent;width:34px}
 table.gantt th.gname{text-align:left;width:auto}
 table.gantt td{padding:5px 2px;border-bottom:1px solid var(--line-soft)}
-table.gantt tr:nth-child(even) td{background:rgba(255,255,255,.05)}
+table.gantt tr:nth-child(even) td{background:var(--panel-b)}
 table.gantt td.gname{text-align:left;color:var(--text);padding-right:10px}
 .gcell{height:13px;border-radius:5px}
 .gcell.on{background:var(--accent)}
 .gcell.now{outline:2px solid var(--orange);outline-offset:-1px}
-.note{margin-top:12px;font-size:.8rem;background:var(--blue-bg);border:1px solid rgba(120,201,255,.35);padding:9px 13px;border-radius:0 12px 12px 0;color:#dcf0ff}
-.issue{margin-top:8px;font-size:.8rem;background:var(--amber-bg);border:1px solid rgba(255,209,102,.35);padding:9px 13px;border-radius:0 12px 12px 0;color:#fff2d1}
+.note{margin-top:12px;font-size:.8rem;background:var(--blue-bg);border:1px solid rgba(120,201,255,.35);padding:9px 13px;border-radius:0 12px 12px 0;color:var(--blue)}
+.issue{margin-top:8px;font-size:.8rem;background:var(--amber-bg);border:1px solid rgba(255,209,102,.35);padding:9px 13px;border-radius:0 12px 12px 0;color:var(--amber)}
 
 /* legend + footer */
 .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:.76rem;color:var(--muted);margin-top:14px;padding-top:12px;border-top:1px solid var(--line-soft)}
 .legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
 footer{font-size:.76rem;color:var(--muted);text-align:center;margin-top:30px;line-height:1.8}
-footer code{color:var(--text);background:rgba(255,255,255,.10);padding:1px 6px;border-radius:6px}
+footer code{color:var(--text);background:var(--card);padding:1px 6px;border-radius:6px}
 @media print{.hctrl{display:none}body{background:#fff}.card{break-inside:avoid;box-shadow:none}}
 
 /* popup */
-.modal-bg{position:fixed;inset:0;background:rgba(6,4,18,.55);display:none;align-items:center;justify-content:center;z-index:90;padding:20px;backdrop-filter:blur(4px)}
-.modal{background:rgba(30,26,55,.55);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:1px solid var(--line);border-radius:26px;max-width:580px;width:100%;padding:24px 26px;box-shadow:var(--shadow)}
-.md-title{font-weight:700;color:#fff;font-size:1rem;line-height:1.5}
+.modal-bg{position:fixed;inset:0;background:var(--modal-overlay);display:none;align-items:center;justify-content:center;z-index:90;padding:20px;backdrop-filter:blur(4px)}
+.modal{background:var(--modal-bg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:1px solid var(--line);border-radius:26px;max-width:580px;width:100%;padding:24px 26px;box-shadow:var(--shadow)}
+.md-title{font-weight:700;color:var(--on-glass);font-size:1rem;line-height:1.5}
 .md-month{font-size:.8rem;color:var(--accent);font-weight:700;margin:5px 0 12px}
 .md-body{font-size:.9rem;line-height:1.75;max-height:52vh;overflow:auto;color:var(--text)}
 .mpct{display:inline-block;background:var(--blue-bg);color:var(--blue);font-weight:700;border-radius:999px;padding:3px 12px;margin-bottom:9px;border:1px solid rgba(120,201,255,.4)}
 .md-meta{font-size:.76rem;color:var(--muted);margin-top:12px;border-top:1px solid var(--line-soft);padding-top:9px}
-.md-close{margin-top:18px;font-family:'Sarabun';background:rgba(255,255,255,.12);color:#fff;border:1px solid var(--line);border-radius:999px;padding:9px 26px;cursor:pointer;font-size:.85rem;transition:background .15s}
-.md-close:hover{background:rgba(255,255,255,.22)}
+.md-close{margin-top:18px;font-family:'Sarabun';background:var(--panel-e);color:var(--on-glass);border:1px solid var(--line);border-radius:999px;padding:9px 26px;cursor:pointer;font-size:.85rem;transition:background .15s}
+.md-close:hover{background:var(--panel-i)}
 .mcell{cursor:pointer}
 .mv{position:relative;background:var(--blue-bg);color:var(--blue);font-weight:700;border-radius:8px;padding:2px 0;font-size:.74rem;text-align:center;border:1px solid rgba(120,201,255,.35)}
 .mv:hover{background:rgba(120,201,255,.28)}
-.mv.hasd::after{content:'';position:absolute;top:-3px;right:-3px;width:8px;height:8px;border-radius:50%;background:var(--orange);border:1.5px solid rgba(20,18,40,.9)}
+.mv.hasd::after{content:'';position:absolute;top:-3px;right:-3px;width:8px;height:8px;border-radius:50%;background:var(--orange);border:1.5px solid var(--dot-ring)}
 </style>
 </head>
 <body>
@@ -248,6 +297,10 @@ footer code{color:var(--text);background:rgba(255,255,255,.10);padding:1px 6px;b
         <select id="monthSel"></select>
         <div class="asof" id="srcInfo">แหล่งข้อมูล: แผนปฏิบัติการบริหารความเสี่ยง</div>
       </div>
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="สลับโหมดมืด/สว่าง" aria-pressed="false" title="สลับโหมดมืด/สว่าง">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 14.4A8.5 8.5 0 1 1 9.6 3.5a7 7 0 0 0 10.9 10.9z"></path></svg>
+      </button>
     </div>
   </div>
 </header>
@@ -292,7 +345,7 @@ footer code{color:var(--text);background:rgba(255,255,255,.10);padding:1px 6px;b
       <span><i style="background:var(--green-bg);border:1px solid var(--green)"></i>ตามแผน / เร็วกว่าแผน</span>
       <span><i style="background:var(--amber-bg);border:1px solid var(--amber)"></i>ล่าช้าเล็กน้อย (&lt; 10 จุด)</span>
       <span><i style="background:var(--red-bg);border:1px solid var(--red)"></i>ล่าช้า (≥ 10 จุด)</span>
-      <span><i style="background:rgba(255,255,255,.14)"></i>ยังไม่ถึงกำหนด / รอรายงานผล</span>
+      <span><i style="background:var(--panel-i)"></i>ยังไม่ถึงกำหนด / รอรายงานผล</span>
       <span><i style="background:linear-gradient(180deg,#5be8c4,#2fbd99)"></i>ช่วงดำเนินการตามแผน</span>
     </div>
   </div>
@@ -456,14 +509,27 @@ function renderKPIs(){
 
 /* ============ Charts ============ */
 const F={family:'Sarabun'};
-const FC='#c3bfdd';
+function chartPalette(){
+  const light=document.documentElement.getAttribute('data-theme')==='light';
+  return light?{
+    tick:'#655f83',grid:'rgba(110,100,170,.14)',planLine:'#8f88b8',
+    actLine:'#0f9a76',actFill:'rgba(15,154,118,.16)',
+    tooltipBg:'rgba(255,255,255,.92)',tooltipBorder:'rgba(110,100,170,.3)',tooltipTitle:'#211c36',tooltipBody:'#211c36',
+    targetBar:'rgba(110,100,170,.22)',actualBar:'#0f9a76'
+  }:{
+    tick:'#c3bfdd',grid:'rgba(255,255,255,.10)',planLine:'#9d97c4',
+    actLine:'#5be8c4',actFill:'rgba(91,232,196,.20)',
+    tooltipBg:'rgba(20,18,40,.85)',tooltipBorder:'rgba(255,255,255,.25)',tooltipTitle:'#fff',tooltipBody:'#f4f2fb',
+    targetBar:'rgba(255,255,255,.18)',actualBar:'#5be8c4'
+  };
+}
 function wAvg(list,m,useActual){ // ค่าเฉลี่ยถ่วงน้ำหนักภายในกลุ่ม (0-100)
   let s=0,w=0,has=false;
   for(const a of list){const v=useActual?actAct(a,m):actTarget(a,m); if(useActual&&v==null)continue; has=true; s+=a.weight*(v??0); w+=a.weight;}
   if(useActual&&!has)return null; return w>0?s/w:0;
 }
 function renderScurve(){
-  const SA=scopeActs();
+  const SA=scopeActs(), P=chartPalette();
   const plan=MONTHS.map((_,i)=>{const x=selPlan?secTargetAt(selPlan,i):overallSecTarget(i);return x==null?null:Math.round(x*100)/100;});
   const act=MONTHS.map((_,i)=>{if(!hasActual)return null;
     let any=SA.some(a=>actHasData(a,i));
@@ -471,11 +537,11 @@ function renderScurve(){
   if(scurve)scurve.destroy();
   scurve=new Chart(document.getElementById('scurve'),{type:'line',
    data:{labels:MONTHS,datasets:[
-    {label:'เป้าหมายสะสม (แผน)',data:plan,borderColor:'#9d97c4',borderDash:[6,4],pointRadius:3,pointBackgroundColor:'#9d97c4',tension:.3,fill:false},
-    {label:'ผลงานสะสม (จริง)',data:act,borderColor:'#5be8c4',backgroundColor:'rgba(91,232,196,.20)',pointRadius:4,pointBackgroundColor:'#5be8c4',tension:.3,fill:true,spanGaps:false}]},
+    {label:'เป้าหมายสะสม (แผน)',data:plan,borderColor:P.planLine,borderDash:[6,4],pointRadius:3,pointBackgroundColor:P.planLine,tension:.3,fill:false},
+    {label:'ผลงานสะสม (จริง)',data:act,borderColor:P.actLine,backgroundColor:P.actFill,pointRadius:4,pointBackgroundColor:P.actLine,tension:.3,fill:true,spanGaps:false}]},
    options:{maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-    plugins:{legend:{labels:{font:F,color:FC}},tooltip:{backgroundColor:'rgba(20,18,40,.85)',borderColor:'rgba(255,255,255,.25)',borderWidth:1,cornerRadius:12,titleColor:'#fff',bodyColor:'#f4f2fb',titleFont:F,bodyFont:F,callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y??'–'}%`}}},
-    scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%',font:F,color:FC},grid:{color:'rgba(255,255,255,.10)'}},x:{ticks:{font:F,color:FC},grid:{display:false}}}}});
+    plugins:{legend:{labels:{font:F,color:P.tick}},tooltip:{backgroundColor:P.tooltipBg,borderColor:P.tooltipBorder,borderWidth:1,cornerRadius:12,titleColor:P.tooltipTitle,bodyColor:P.tooltipBody,titleFont:F,bodyFont:F,callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y??'–'}%`}}},
+    scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%',font:F,color:P.tick},grid:{color:P.grid}},x:{ticks:{font:F,color:P.tick},grid:{display:false}}}}});
 }
 function renderSecBar(){
   document.getElementById('secDesc').textContent=`เป้าหมาย vs ผลงาน ของแต่ละแผนหลัก ณ ${MONTHS[curM]} ${YEAR_BE} (ถ่วงน้ำหนัก)`;
@@ -483,12 +549,13 @@ function renderSecBar(){
   const t=SECTIONS.map(s=>{const x=secTargetAt(s.code,curM);return x==null?0:Math.round(x*100)/100;});
   const v=SECTIONS.map(s=>{const x=wAvg(ACTIVITIES.filter(a=>a.section===s.code),curM,true);return x==null?null:Math.round(x*100)/100;});
   if(secbar)secbar.destroy();
+  const P=chartPalette();
   secbar=new Chart(document.getElementById('secbar'),{type:'bar',
-   data:{labels,datasets:[{label:'เป้าหมาย',data:t,backgroundColor:'rgba(255,255,255,.18)',borderRadius:6},
-    {label:'ผลงาน',data:v,backgroundColor:'#5be8c4',borderRadius:6}]},
-   options:{maintainAspectRatio:false,plugins:{legend:{labels:{font:F,color:FC}},
-     tooltip:{backgroundColor:'rgba(20,18,40,.85)',borderColor:'rgba(255,255,255,.25)',borderWidth:1,cornerRadius:12,titleColor:'#fff',bodyColor:'#f4f2fb',titleFont:F,bodyFont:F,callbacks:{title:it=>SECNAME[SECTIONS[it[0].dataIndex].code].slice(0,46),label:c=>` ${c.dataset.label}: ${c.parsed.y??'–'}%`}}},
-    scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%',font:F,color:FC},grid:{color:'rgba(255,255,255,.10)'}},x:{ticks:{font:F,color:FC},grid:{display:false}}}}});
+   data:{labels,datasets:[{label:'เป้าหมาย',data:t,backgroundColor:P.targetBar,borderRadius:6},
+    {label:'ผลงาน',data:v,backgroundColor:P.actualBar,borderRadius:6}]},
+   options:{maintainAspectRatio:false,plugins:{legend:{labels:{font:F,color:P.tick}},
+     tooltip:{backgroundColor:P.tooltipBg,borderColor:P.tooltipBorder,borderWidth:1,cornerRadius:12,titleColor:P.tooltipTitle,bodyColor:P.tooltipBody,titleFont:F,bodyFont:F,callbacks:{title:it=>SECNAME[SECTIONS[it[0].dataIndex].code].slice(0,46),label:c=>` ${c.dataset.label}: ${c.parsed.y??'–'}%`}}},
+    scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%',font:F,color:P.tick},grid:{color:P.grid}},x:{ticks:{font:F,color:P.tick},grid:{display:false}}}}});
 }
 /* ============ Gantt + Table ============ */
 function ganttHTML(a){
@@ -628,8 +695,31 @@ function bindModal(){
   });
 }
 
+/* ============ theme (dark/light) ============ */
+const THEME_KEY='rmDashTheme';
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  const btn=document.getElementById('themeToggle');
+  if(btn){btn.setAttribute('aria-pressed',t==='light'?'true':'false');
+    btn.title=t==='light'?'สลับเป็นโหมดมืด':'สลับเป็นโหมดสว่าง';}
+}
+function initTheme(){
+  let saved=null; try{saved=localStorage.getItem(THEME_KEY);}catch(e){}
+  const sysLight=window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches;
+  applyTheme(saved||(sysLight?'light':'dark'));
+}
+function toggleTheme(){
+  const cur=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark';
+  const next=cur==='light'?'dark':'light';
+  applyTheme(next);
+  try{localStorage.setItem(THEME_KEY,next);}catch(e){}
+  if(scurve||secbar){renderScurve();renderSecBar();}
+}
+
 /* ============ init ============ */
 function init(){
+  initTheme();
+  document.getElementById('themeToggle').addEventListener('click',toggleTheme);
   const sel=document.getElementById('monthSel');
   MONTHS.forEach((m,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${m} ${YEAR_BE}`;sel.appendChild(o);});
   let def=null;
@@ -667,6 +757,7 @@ const pSum=fetch('data/rm_summary.csv',{cache:'no-store'}).then(r=>{if(!r.ok)thr
 const pMon=fetch('data/rm_monthly.csv',{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.text();})
  .then(t=>loadMonthlyRows(parseCSV(t.replace(/^﻿/,''))))
  .catch(()=>loadMonthlyRows(EMBED_MONTHLY));
+initTheme();
 Promise.all([pAct,pSum,pMon]).finally(init);
 </script>
 </body>
