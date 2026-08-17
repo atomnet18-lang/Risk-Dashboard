@@ -19,7 +19,7 @@ def num(v):
     try:
         f=float(v)
         if 0<f<=1 and f!=int(f): f*=100
-        return max(0,min(100,round(f)))
+        return max(0,min(100,round(f,2)))
     except: return None
 
 rows=[]; n=0

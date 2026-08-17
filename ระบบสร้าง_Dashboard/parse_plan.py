@@ -25,7 +25,7 @@ def monthly(r):
     for c in range(G, R+1):
         v = cell(r, c)
         try:
-            out.append(round(float(v), 1) if v is not None else None)
+            out.append(round(float(v), 2) if v is not None else None)
         except (TypeError, ValueError):
             out.append(None)
     return out
@@ -125,7 +125,7 @@ for _s in items:
     if "plan" not in _s:
         _subs=[c for c in _s["children"] if c["type"]=="subplan"]
         if _subs:
-            _s["plan"]=[min(100,round(sum(_cf(c.get("plan_pct") or [None]*12,m) for c in _subs)/len(_subs))) for m in range(12)]
+            _s["plan"]=[min(100,round(sum(_cf(c.get("plan_pct") or [None]*12,m) for c in _subs)/len(_subs),2)) for m in range(12)]
         else:
             _s["plan"]=[None]*12
 out = {"year":"2569","months":MONTHS,"sections":items}
