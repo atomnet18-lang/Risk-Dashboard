@@ -288,14 +288,12 @@ footer code{color:var(--text);background:var(--card);padding:1px 6px;border-radi
         <div class="dept">ฝ่ายบริหารความเสี่ยงองค์กร</div>
         <h1>Dashboard แผนปฏิบัติการบริหารความเสี่ยง</h1>
         <p>ปีงบประมาณ <span id="yrTxt"></span> · ระบบบริหารความเสี่ยงและการควบคุมภายใน (RM &amp; IC)</p>
-        <span class="badge-iso">RM &amp; IC · GRC</span>
       </div>
     </div>
     <div class="hctrl">
       <div>
         <label for="monthSel">ข้อมูล ณ เดือน</label><br>
         <select id="monthSel"></select>
-        <div class="asof" id="srcInfo">แหล่งข้อมูล: แผนปฏิบัติการบริหารความเสี่ยง</div>
       </div>
       <button id="themeToggle" class="theme-toggle" type="button" aria-label="สลับโหมดมืด/สว่าง" aria-pressed="false" title="สลับโหมดมืด/สว่าง">
         <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
@@ -351,8 +349,7 @@ footer code{color:var(--text);background:var(--card);padding:1px 6px;border-radi
   </div>
 
   <footer>
-    แผนปฏิบัติการบริหารความเสี่ยง และการบริหารความต่อเนื่องทางธุรกิจ ปี <span id="yrF"></span> · เป้าหมายรวมทั้งปี = ร้อยละ 100 (ถ่วงน้ำหนัก <span id="nF"></span> กิจกรรม)<br>
-    ผลงานจริงอัปเดตจากไฟล์ <code>data/rm_actual.csv</code> (Microsoft Lists → GitHub) · จัดทำเพื่อการติดตามและสื่อสารภายในองค์กร
+    แผนปฏิบัติการบริหารความเสี่ยง และการบริหารความต่อเนื่องทางธุรกิจ ปี <span id="yrF"></span>
   </footer>
 </div>
 
@@ -377,7 +374,6 @@ const SECNAME={}; SECTIONS.forEach(s=>SECNAME[s.code]=s.name);
 const SUBPLAN=RAW.subplans||{};
 document.getElementById('yrTxt').textContent=RAW.year;
 document.getElementById('yrF').textContent=RAW.year;
-document.getElementById('nF').textContent=ACTIVITIES.length;
 document.getElementById('actCount').textContent=ACTIVITIES.length;
 
 /* ============ ผลงานจริง ============ */
@@ -426,8 +422,8 @@ function actHasData(a,m){for(const id of leafIds(a))for(let j=0;j<=m;j++){const 
 function targetAt(id,m){let r=null;const rec=ACTUAL[id]||{};for(let i=0;i<=m;i++)if(rec[i]&&rec[i].t!=null)r=rec[i].t;return r;}
 function leafTarget(a,s,m){const td=targetAt(s.id,m); if(td!=null)return td; if(s.bits&&s.bits.indexOf('1')>=0)return subPlanAt(s.bits,m); return planAt(a,m);}
 function actTarget(a,m){const subs=(a.subs&&a.subs.length)?a.subs:[{id:a.id,bits:null,_self:true}]; let sum=0,nn=0; for(const s of subs){const t=leafTarget(a,s,m); if(t!=null){sum+=t;nn++;}} return nn?sum/nn:planAt(a,m);}
-function secTargetAt(code,m){const sx=SECTIONS.find(x=>x.code===code); if(!sx||!sx.plan)return null; let v=null; for(let i=0;i<=m;i++)if(sx.plan[i]!=null)v=sx.plan[i]; return v;}
-function overallSecTarget(m){let sum=0,w=0; for(const sx of SECTIONS){const t=secTargetAt(sx.code,m); if(t==null)continue; const sw=ACTIVITIES.filter(a=>a.section===sx.code).reduce((x,a)=>x+a.weight,0); sum+=sw*t; w+=sw;} return w?sum/w:null;}
+function secTargetAt(code,m){return wAvg(ACTIVITIES.filter(a=>a.section===code),m,false);}
+function overallSecTarget(m){return wAvg(ACTIVITIES,m,false);}
 function wsAct(a,m){const ids=leafIds(a);let nd=0,doing=0;for(const id of ids){const st=lastInfo(id,m,'st');if(st===DONE)nd++;else if(st===DOING)doing++;}if(nd===ids.length)return DONE;if(nd>0||doing>0)return DOING;return NOT;}
 function subPlanAt(bits,m){let n=0;for(let i=0;i<12;i++)if(bits[i]==='1')n++;if(!n)return null;let cum=0;for(let i=0;i<=m;i++)if(bits[i]==='1')cum++;return Math.round(100*cum/n);}
 function subStat(t,v){if(t==null||t===0)return['n','ยังไม่ถึงกำหนด','var(--muted)'];if(v==null)return['b','รอรายงาน','var(--blue)'];const d=v-t;if(d>=0)return['g',d>0?'เร็วกว่าแผน':'ตามแผน','var(--green)'];if(d>-10)return['a','ล่าช้าเล็กน้อย','var(--amber)'];return['r','ล่าช้า','var(--red)'];}
@@ -745,11 +741,9 @@ function loadMonthlyRows(rows){MONTHLY={}; if(!rows||rows.length<2)return;
   if(iM<0||iR<0)return;
   for(let r=1;r<rows.length;r++){const c=rows[r];let m=(c[iM]||'').trim();m=THM[m]||parseInt(m);if(!m||m<1||m>12)continue;const txt=(c[iR]||'').trim();if(txt)MONTHLY[m-1]=txt;}
 }
-function useEmbed(){hasActual=loadActualRows(EMBED_ACTUAL);
-  document.getElementById('srcInfo').textContent=hasActual?'แหล่งข้อมูล: แผน RM 2569 + ผลงานจริง (ตัวอย่างฝังในไฟล์)':'แหล่งข้อมูล: แผนปฏิบัติการบริหารความเสี่ยง';}
+function useEmbed(){hasActual=loadActualRows(EMBED_ACTUAL);}
 const pAct=fetch('data/rm_actual.csv',{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.text();})
- .then(t=>{hasActual=loadActualRows(parseCSV(t.replace(/^﻿/,'')));
-   document.getElementById('srcInfo').textContent=hasActual?'แหล่งข้อมูล: แผน RM 2569 + ผลงานจริง (Excel → GitHub)':'แหล่งข้อมูล: แผนปฏิบัติการบริหารความเสี่ยง';})
+ .then(t=>{hasActual=loadActualRows(parseCSV(t.replace(/^﻿/,'')));})
  .catch(()=>useEmbed());
 const pSum=fetch('data/rm_summary.csv',{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.text();})
  .then(t=>loadSummaryRows(parseCSV(t.replace(/^﻿/,''))))

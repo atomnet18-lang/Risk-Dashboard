@@ -36,9 +36,10 @@ thin=Side(style="thin",color="C7CED6"); B=Border(thin,thin,thin,thin)
 ctr=Alignment(horizontal="center",vertical="center",wrap_text=True); wrap=Alignment(vertical="center",wrap_text=True)
 title=Font(bold=True,size=13,color=NAVY)
 
+WEIGHT={a["id"]:a["weight"] for a in acts}
 wb=openpyxl.Workbook(); ws=wb.active; ws.title="บันทึกผล"
 HEAD=["รหัสกิจกรรม","แผนหลัก","แผนงานย่อย","รหัส","ชื่อกิจกรรม","ผู้รับผิดชอบ"]\
-     +[f"เป้า {m}" for m in M]+[f"ผล {m}" for m in M]+["รายละเอียดการดำเนินการ (ล่าสุด)","ปัญหาอุปสรรค","ผู้รายงาน"]
+     +[f"เป้า {m}" for m in M]+[f"ผล {m}" for m in M]+["รายละเอียดการดำเนินการ (ล่าสุด)","ปัญหาอุปสรรค","ผู้รายงาน","ถ่วงน้ำหนัก(%)"]
 ws.append(HEAD)
 random.seed(7); CUR=5
 for l in lv:
@@ -54,30 +55,33 @@ for l in lv:
     detail=f'ดำเนินการ {l["name"][:20]} (ถึง {M[latest]})' if latest>=0 else ""
     issue="ล่าช้ากว่าแผน ติดขั้นตอนอนุมัติ" if (latest>=0 and tg[latest] is not None and (tg[latest]-acells[latest])>=15) else ""
     rep=l["resp"].split("/")[-1].strip() or "-"
-    ws.append([l["id"],l["sec"],l["subplan"],l["parent_code"],l["name"],l["resp"]]+tcells+acells+[detail,issue,rep])
+    ws.append([l["id"],l["sec"],l["subplan"],l["parent_code"],l["name"],l["resp"]]+tcells+acells+[detail,issue,rep,WEIGHT.get(l["id"],0)])
 # styling
 NC=len(HEAD)
+WCOL=NC  # คอลัมน์ "ถ่วงน้ำหนัก(%)" (อ้างอิงเท่านั้น ใช้ในสูตร SUMPRODUCT ของชีตสรุป)
 for c in range(1,NC+1):
     x=ws.cell(1,c); x.font=HF; x.alignment=ctr; x.border=B
     x.fill=TGTH if 7<=c<=18 else ACTH if 19<=c<=30 else HEADF
 for r in range(2,ws.max_row+1):
     for c in range(1,NC+1):
         cell=ws.cell(r,c); cell.border=B; cell.alignment=wrap if c in (4,5,31,32) else ctr
-        if c<=6: cell.fill=REF
+        if c==WCOL: cell.fill=REF; cell.number_format="0.00"
+        elif c<=6: cell.fill=REF
         elif 7<=c<=18: cell.fill=TGF
         elif 19<=c<=30: cell.fill=ACF
-widths=[15,7,9,28,36,16]+[7]*24+[32,24,13]
+widths=[15,7,9,28,36,16]+[7]*24+[32,24,13,14]
 for i,w in enumerate(widths,1): ws.column_dimensions[col(i)].width=w
 ws.row_dimensions[1].height=30; ws.freeze_panes="G2"
 tbl=Table(displayName="RMEntry",ref=f"A1:{col(NC)}{ws.max_row}")
 tbl.tableStyleInfo=TableStyleInfo(name="TableStyleLight9",showRowStripes=False); ws.add_table(tbl)
 dvp=DataValidation(type="whole",operator="between",formula1=0,formula2=100,allow_blank=True)
 ws.add_data_validation(dvp); dvp.add(f"G2:AD{ws.max_row}")
+WCOL_LETTER=col(WCOL); LASTROW=ws.max_row; PLANCOL="B"; TGT_FIRST_COL=col(7); TGT_LAST_COL=col(18)
 
 # Sheet 2: วิธีใช้
 w3=wb.create_sheet("วิธีใช้")
 steps=[["วิธีกรอกและนำเข้า Dashboard",""],["",""],
- ["1)","ชีต \"บันทึกผล\" — แต่ละแถวคือกิจกรรมย่อย 1 ข้อ (คอลัมน์ 1-6 เติมให้แล้ว ห้ามแก้รหัส)"],
+ ["1)","ชีต \"บันทึกผล\" — แต่ละแถวคือกิจกรรม 1 ข้อ (48 แถว) (คอลัมน์ 1-6 และ \"ถ่วงน้ำหนัก(%)\" เติมให้แล้ว ห้ามแก้รหัส/น้ำหนัก)"],
  ["2)","กลุ่ม \"เป้า ม.ค.–ธ.ค.\" (พื้นเหลือง) = ค่าเป้าหมาย % สะสม — พรีฟิลตามแผนให้แล้ว แก้ได้ตามต้องการ"],
  ["3)","กลุ่ม \"ผล ม.ค.–ธ.ค.\" (พื้นฟ้า) = % ผลจริงสะสม กรอกเฉพาะเดือนที่อัปเดต"],
  ["","   เดือนที่เว้นว่าง ระบบถือว่าคงค่าล่าสุด (ทั้งเป้าหมายและผลจริง)"],
@@ -87,7 +91,9 @@ steps=[["วิธีกรอกและนำเข้า Dashboard",""],["",
  ["5)","python3 ระบบสร้าง_Dashboard/convert_to_csv.py   → สร้าง data/rm_actual.csv + อัปเดต index.html"],
  ["6)","git add -A && git commit -m \"update\" && git push"],
  ["",""],
- ["หมายเหตุ","Dashboard ใช้ค่า \"เป้าหมาย\" จากไฟล์นี้โดยตรง (ถ้าแก้เป้าหมาย กราฟ/แถบ/สถานะ จะขยับตาม)"],
+ ["หมายเหตุ","เป้าหมายทุกระดับใน Dashboard (48 กิจกรรม, 3 กล่องแผนหลัก, กราฟ S-Curve/แท่ง) อ้างอิงจากคอลัมน์ \"เป้า\" ในไฟล์นี้ทั้งหมด"],
+ ["","ตัวเลขเป้าหมายระดับแผนหลักคือค่าเฉลี่ยถ่วงน้ำหนัก (ตามคอลัมน์ \"ถ่วงน้ำหนัก(%)\") ของกิจกรรมในแผนนั้น — ดูสูตรจริงได้ที่ชีต \"สรุปเป้าหมายตามแผน\""],
+ ["","ชีต \"สรุปเป้าหมายตามแผน\" คำนวณสดด้วยสูตร SUMPRODUCT จากคอลัมน์เป้า+น้ำหนัก แก้เป้าหมายกิจกรรมใดก็ตาม ตัวเลขแผนหลักในชีตนี้จะขยับให้อัตโนมัติ (ตรงกับที่ Dashboard จะแสดง)"],
  ["","สถานะงานคำนวณจากผลจริง: 100=เสร็จสิ้น · 1-99=อยู่ระหว่างดำเนินการ · 0/ว่าง=ยังไม่ดำเนินการ"]]
 for r in steps: w3.append(r)
 w3["A1"].font=title
@@ -135,6 +141,49 @@ for r in range(2,wsm.max_row+1):
         cell.alignment=ctr if c==1 else wrap
         if c==1: cell.fill=REF
 wsm.column_dimensions["A"].width=10; wsm.column_dimensions["B"].width=95; wsm.row_dimensions[1].height=22
+
+# ===== Sheet: สรุปเป้าหมายตามแผน (สูตรผูกอัตโนมัติจากชีต "บันทึกผล") =====
+# เป้าหมายสะสมถ่วงน้ำหนักรายเดือน ของแต่ละแผนหลัก + รวมทั้งหมด
+# คำนวณสด (SUMPRODUCT) จากคอลัมน์ "เป้า <เดือน>" x "ถ่วงน้ำหนัก(%)" ในชีต "บันทึกผล"
+# ตัวเลขนี้คือค่าที่ Dashboard จะแสดงในกล่องแผนหลัก 3 กล่อง + กราฟ S-Curve/แท่ง (เส้น/แท่งเป้าหมาย)
+wst=wb.create_sheet("สรุปเป้าหมายตามแผน")
+TH=["แผนหลัก","รหัสแผน"]+M
+wst.append(TH)
+def _plan_target_formula(code_cell):
+    parts=[]
+    for mc in range(7,19):
+        L=col(mc)
+        f=(f'=IFERROR(SUMPRODUCT((บันทึกผล!${PLANCOL}$2:${PLANCOL}${LASTROW}={code_cell})*'
+           f'บันทึกผล!${WCOL_LETTER}$2:${WCOL_LETTER}${LASTROW}*N(บันทึกผล!{L}$2:{L}${LASTROW}))/'
+           f'SUMPRODUCT((บันทึกผล!${PLANCOL}$2:${PLANCOL}${LASTROW}={code_cell})*'
+           f'บันทึกผล!${WCOL_LETTER}$2:${WCOL_LETTER}${LASTROW}),"")')
+        parts.append(f)
+    return parts
+def _overall_target_formula():
+    parts=[]
+    for mc in range(7,19):
+        L=col(mc)
+        f=(f'=IFERROR(SUMPRODUCT(บันทึกผล!${WCOL_LETTER}$2:${WCOL_LETTER}${LASTROW}*'
+           f'N(บันทึกผล!{L}$2:{L}${LASTROW}))/SUMPRODUCT(บันทึกผล!${WCOL_LETTER}$2:${WCOL_LETTER}${LASTROW}),"")')
+        parts.append(f)
+    return parts
+for s in secs:
+    r=wst.max_row+1
+    wst.append([s["name"],s["code"]]+_plan_target_formula(f"$B{r}"))
+r=wst.max_row+1
+wst.append(["รวมทั้งหมด (ถ่วงน้ำหนักทุกกิจกรรม)","*"]+_overall_target_formula())
+for c in range(1,len(TH)+1):
+    x=wst.cell(1,c); x.fill=HEADF; x.font=HF; x.alignment=ctr; x.border=B
+for r in range(2,wst.max_row+1):
+    for c in range(1,len(TH)+1):
+        cell=wst.cell(r,c); cell.border=B
+        cell.alignment=wrap if c==1 else ctr
+        if c<=2: cell.fill=REF
+        else: cell.fill=TGF; cell.number_format="0.0"
+wst.column_dimensions["A"].width=34; wst.column_dimensions["B"].width=9
+for i in range(3,len(TH)+1): wst.column_dimensions[col(i)].width=9
+wst.row_dimensions[1].height=22
+wst.freeze_panes="C2"
 
 out=os.path.join(ROOT,"บันทึกผลการดำเนินงาน_RM_2569.xlsx")
 wb.save(out)
