@@ -347,9 +347,6 @@ footer code{color:var(--text);background:var(--card);padding:1px 6px;border-radi
     </div>
   </div>
 
-  <footer>
-    แผนปฏิบัติการบริหารความเสี่ยง และการบริหารความต่อเนื่องทางธุรกิจ ปี <span id="yrF"></span>
-  </footer>
 </div>
 
 <div class="modal-bg" id="modalBg"><div class="modal">
@@ -372,7 +369,6 @@ const SECTIONS = RAW.sections;
 const SECNAME={}; SECTIONS.forEach(s=>SECNAME[s.code]=s.name);
 const SUBPLAN=RAW.subplans||{};
 document.getElementById('yrTxt').textContent=RAW.year;
-document.getElementById('yrF').textContent=RAW.year;
 document.getElementById('actCount').textContent=ACTIVITIES.length;
 
 /* ============ ผลงานจริง ============ */
