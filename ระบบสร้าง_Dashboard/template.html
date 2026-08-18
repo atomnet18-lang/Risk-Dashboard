@@ -528,8 +528,7 @@ function renderSecBar(){
 }
 /* ============ Gantt + Table ============ */
 function ganttHTML(a){
-  const _sm=(SUMMARY[a.id]||{})[curM]; const sumBox=_sm?`<div class="actsumm"><span class="as-h">📋 สรุปผลการดำเนินงาน · ${MONTHS[curM]} ${YEAR_BE}</span>${_sm}</div>`:'';
-  let h=sumBox+`<div class="gtitle">ความคืบหน้ารายเดือน · เป้าหมาย (ขีดบน) เทียบ ผลจริง (แถบล่าง) · เดือนที่เลือกไฮไลต์ · คลิก "ดู" อ่านรายละเอียด</div>`;
+  let h=`<div class="gtitle">ความคืบหน้ารายเดือน · เป้าหมาย (ขีดบน) เทียบ ผลจริง (แถบล่าง) · เดือนที่เลือกไฮไลต์ · คลิก "ดู" อ่านรายละเอียด</div>`;
   h+=`<div class="sthead"><div>เดือน</div><div>เป้าหมาย vs ผลจริง</div><div>รายละเอียด</div></div>`;
   const rec=ACTUAL[a.id]||{};
   for(let i=0;i<12;i++){
@@ -566,7 +565,7 @@ function renderTable(){
       const tp=planAt(a,curM),va=actAct(a,curM),s=status(a,curM),pct=va??0;const nsub=(a.subs&&a.subs.length)?a.subs.length:0;
       const tr=document.createElement('tr');tr.className='main';tr.style.display=expanded?'':'none';
       tr.innerHTML=`
-        <td class="name"><div class="nm"><span class="caret">▶</span><div><b>${a.code}</b> ${a.name} ${nsub?`<span style="font-size:.68rem;font-weight:700;color:var(--blue);background:var(--blue-bg);border-radius:999px;padding:2px 9px;white-space:nowrap">${nsub} ย่อย</span>`:''}${(SUMMARY[a.id]&&Object.keys(SUMMARY[a.id]).length)?` <span class="sumico" data-sumid="${a.id}" title="ดูสรุปรายเดือน">📋</span>`:''}${a.output?`<div class="outp">ตัวชี้วัด: ${a.output}</div>`:''}</div></div></td>
+        <td class="name"><div class="nm"><span class="caret">▶</span><div><b>${a.code}</b> ${a.name} ${nsub?`<span style="font-size:.68rem;font-weight:700;color:var(--blue);background:var(--blue-bg);border-radius:999px;padding:2px 9px;white-space:nowrap">${nsub} ย่อย</span>`:''}${a.output?`<div class="outp">ตัวชี้วัด: ${a.output}</div>`:''}</div></div></td>
         <td><span class="wchip">${fmt(a.weight)}%</span></td>
         <td>${fmt(tp)}%</td><td>${va==null?'–':fmt(va)+'%'}</td>
         <td><div class="pcell"><div class="pbar"><i style="width:${Math.min(pct,100)}%;background:${s.cls==='r'?'var(--red)':s.cls==='a'?'var(--amber)':'var(--blue)'}"></i></div><span>${va==null?'':fmt(va)+'%'}</span></div></td>
