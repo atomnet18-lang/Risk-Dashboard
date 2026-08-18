@@ -333,17 +333,10 @@ footer code{color:var(--text);background:var(--card);padding:1px 6px;border-radi
   <div class="planboxes" id="planBoxes"></div>
   <div class="planhint" id="planHint"></div>
 
-  <div class="grid2">
-    <div class="card">
-      <h2>ความก้าวหน้าสะสมรายเดือน (S-Curve)</h2>
-      <div class="desc">เป้าหมายสะสมถ่วงน้ำหนักตามแผน เทียบกับผลการดำเนินงานจริง (ร้อยละ)</div>
-      <div class="chartbox"><canvas id="scurve"></canvas></div>
-    </div>
-    <div class="card">
-      <h2>ความก้าวหน้าตามแผนหลัก</h2>
-      <div class="desc" id="secDesc">เป้าหมาย vs ผลงาน ของแต่ละแผนหลัก (ถ่วงน้ำหนัก)</div>
-      <div class="chartbox"><canvas id="secbar"></canvas></div>
-    </div>
+  <div class="card">
+    <h2>ความก้าวหน้าสะสมรายเดือน (S-Curve)</h2>
+    <div class="desc">เป้าหมายสะสมถ่วงน้ำหนักตามแผน เทียบกับผลการดำเนินงานจริง (ร้อยละ)</div>
+    <div class="chartbox"><canvas id="scurve"></canvas></div>
   </div>
 
   <div class="card">
@@ -467,7 +460,7 @@ function wsChip(s){if(s===DONE)return `<span class="chip g">✓ ${DONE}</span>`;
   if(s===DOING)return `<span class="chip b">⟳ ${DOING}</span>`;
   if(s===NOT)return `<span class="chip n">○ ${NOT}</span>`;return '<span class="chip n">–</span>';}
 
-let curM=5, scurve=null, secbar=null, hasActual=false;
+let curM=5, scurve=null, hasActual=false;
 let selPlan=null;  // null = ทุกแผน
 function scopeActs(){return selPlan?ACTIVITIES.filter(a=>a.section===selPlan):ACTIVITIES;}
 function scopeLeaves(){const o=[];scopeActs().forEach(a=>{(a.subs&&a.subs.length?a.subs.map(s=>s.id):[a.id]).forEach(id=>o.push(id));});return o;}
@@ -532,20 +525,6 @@ function renderScurve(){
     {label:'ผลงานสะสม (จริง)',data:act,borderColor:P.actLine,backgroundColor:P.actFill,pointRadius:4,pointBackgroundColor:P.actLine,tension:.3,fill:true,spanGaps:false}]},
    options:{maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
     plugins:{legend:{labels:{font:F,color:P.tick}},tooltip:{backgroundColor:P.tooltipBg,borderColor:P.tooltipBorder,borderWidth:1,cornerRadius:12,titleColor:P.tooltipTitle,bodyColor:P.tooltipBody,titleFont:F,bodyFont:F,callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y??'–'}%`}}},
-    scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%',font:F,color:P.tick},grid:{color:P.grid}},x:{ticks:{font:F,color:P.tick},grid:{display:false}}}}});
-}
-function renderSecBar(){
-  document.getElementById('secDesc').textContent=`เป้าหมาย vs ผลงาน ของแต่ละแผนหลัก ณ ${MONTHS[curM]} ${YEAR_BE} (ถ่วงน้ำหนัก)`;
-  const labels=SECTIONS.map(s=>'แผน '+s.code.replace('.',''));
-  const t=SECTIONS.map(s=>{const x=secTargetAt(s.code,curM);return x==null?0:Math.round(x*100)/100;});
-  const v=SECTIONS.map(s=>{const x=wAvg(ACTIVITIES.filter(a=>a.section===s.code),curM,true);return x==null?null:Math.round(x*100)/100;});
-  if(secbar)secbar.destroy();
-  const P=chartPalette();
-  secbar=new Chart(document.getElementById('secbar'),{type:'bar',
-   data:{labels,datasets:[{label:'เป้าหมาย',data:t,backgroundColor:P.targetBar,borderRadius:6},
-    {label:'ผลงาน',data:v,backgroundColor:P.actualBar,borderRadius:6}]},
-   options:{maintainAspectRatio:false,plugins:{legend:{labels:{font:F,color:P.tick}},
-     tooltip:{backgroundColor:P.tooltipBg,borderColor:P.tooltipBorder,borderWidth:1,cornerRadius:12,titleColor:P.tooltipTitle,bodyColor:P.tooltipBody,titleFont:F,bodyFont:F,callbacks:{title:it=>SECNAME[SECTIONS[it[0].dataIndex].code].slice(0,46),label:c=>` ${c.dataset.label}: ${c.parsed.y??'–'}%`}}},
     scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%',font:F,color:P.tick},grid:{color:P.grid}},x:{ticks:{font:F,color:P.tick},grid:{display:false}}}}});
 }
 /* ============ Gantt + Table ============ */
@@ -674,7 +653,7 @@ function renderMarquee(){
   }).join('');
   track.innerHTML=items+items; // exact duplicate เพื่อให้ลูป translateX(-50%) ต่อเนื่องไร้รอยต่อ
 }
-function renderAll(){renderPlanBoxes();renderMarquee();renderScurve();renderSecBar();renderTable();}
+function renderAll(){renderPlanBoxes();renderMarquee();renderScurve();renderTable();}
 
 /* ============ popup ============ */
 const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');
@@ -712,7 +691,7 @@ function toggleTheme(){
   const next=cur==='light'?'dark':'light';
   applyTheme(next);
   try{localStorage.setItem(THEME_KEY,next);}catch(e){}
-  if(scurve||secbar){renderScurve();renderSecBar();}
+  if(scurve){renderScurve();}
 }
 
 /* ============ init ============ */
