@@ -118,7 +118,7 @@ button:focus-visible,select:focus-visible,.planbox:focus-visible,a:focus-visible
 [data-theme="light"] .theme-toggle .icon-moon{opacity:0;transform:rotate(-80deg) scale(.4)}
 
 /* Header */
-header{background:var(--card);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-bottom:1px solid var(--line);border-radius:0 0 26px 26px;color:var(--on-glass);padding:26px 0 30px;box-shadow:var(--shadow)}
+header{position:sticky;top:0;z-index:100;background:var(--card);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-bottom:1px solid var(--line);border-radius:0 0 26px 26px;color:var(--on-glass);padding:26px 0 20px;box-shadow:var(--shadow)}
 .hrow{max-width:1320px;margin:0 auto;padding:0 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
 .htitle h1{font-size:1.4rem;font-weight:700;letter-spacing:.2px;color:var(--on-glass)}
 .htitle p{font-size:.9rem;opacity:.82;margin-top:4px;font-weight:300;letter-spacing:.3px}
@@ -321,13 +321,13 @@ footer code{color:var(--text);background:var(--card);padding:1px 6px;border-radi
       </button>
     </div>
   </div>
-</header>
 
-<div class="marquee-outer">
-  <div class="marquee-wrap" id="marqueeWrap" role="marquee" aria-label="เป้าหมายและผลงานแต่ละแผนหลัก">
-    <div class="marquee-track" id="marqueeTrack"></div>
+  <div class="marquee-outer">
+    <div class="marquee-wrap" id="marqueeWrap" role="marquee" aria-label="เป้าหมายและผลงานแต่ละแผนหลัก">
+      <div class="marquee-track" id="marqueeTrack"></div>
+    </div>
   </div>
-</div>
+</header>
 
 <div class="wrap">
   <div class="planboxes" id="planBoxes"></div>
