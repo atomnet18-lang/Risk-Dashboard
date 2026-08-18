@@ -83,7 +83,27 @@ body{
 @media(prefers-reduced-motion:reduce){
   .planbox,.btn-sm,.md-close,select#monthSel,table.acts tr.main,.mv,.theme-toggle,.theme-toggle svg,body{transition:none!important}
   .planbox:hover,.theme-toggle:hover,.theme-toggle:active{transform:none!important}
+  .marquee-track{animation:none!important}
+  .marquee-wrap{overflow-x:auto}
 }
+
+/* Marquee: เป้าหมาย/ผลงานแต่ละแผน วิ่งวนด้านบน */
+.marquee-outer{max-width:1320px;margin:0 auto;padding:0 24px}
+.marquee-wrap{
+  position:relative;overflow:hidden;margin-top:18px;padding:11px 0;
+  background:var(--card);border:1px solid var(--line);border-radius:14px;
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);box-shadow:var(--shadow-sm);
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);
+}
+.marquee-track{display:inline-flex;width:max-content;white-space:nowrap;animation:marquee-scroll 26s linear infinite}
+.marquee-wrap:hover .marquee-track{animation-play-state:paused}
+@keyframes marquee-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.marquee-item{display:inline-flex;align-items:center;gap:9px;padding:0 30px;font-size:.86rem;font-weight:600;white-space:nowrap;border-right:1px solid var(--line-soft)}
+.marquee-item b{color:var(--on-glass);font-weight:700}
+.marquee-item .mq-tgt{color:var(--lavender);font-weight:700}
+.marquee-item .mq-act{color:var(--accent);font-weight:700}
+.marquee-item .mq-act.na{color:var(--muted);font-weight:500}
 button,select,[tabindex]{outline:none}
 button:focus-visible,select:focus-visible,.planbox:focus-visible,a:focus-visible,[tabindex]:focus-visible{box-shadow:var(--focus)!important}
 
@@ -302,6 +322,12 @@ footer code{color:var(--text);background:var(--card);padding:1px 6px;border-radi
     </div>
   </div>
 </header>
+
+<div class="marquee-outer">
+  <div class="marquee-wrap" id="marqueeWrap" role="marquee" aria-label="เป้าหมายและผลงานแต่ละแผนหลัก">
+    <div class="marquee-track" id="marqueeTrack"></div>
+  </div>
+</div>
 
 <div class="wrap">
   <div class="planboxes" id="planBoxes"></div>
@@ -639,7 +665,16 @@ function renderSummary(){
 function renderMonthly(){const el=document.getElementById('monthlyBody');if(!el)return;
   document.getElementById('monthlyTitle').textContent=`📝 รายงานประจำเดือน ${MONTHS[curM]} ${YEAR_BE}`;
   const t=MONTHLY[curM]; el.innerHTML=t?esc(t):'<span class="mb-empty">— ยังไม่มีรายงานประจำเดือนนี้ —</span>';}
-function renderAll(){renderPlanBoxes();renderScurve();renderSecBar();renderTable();}
+function renderMarquee(){
+  const track=document.getElementById('marqueeTrack'); if(!track)return;
+  const items=SECTIONS.map(sec=>{
+    const list=ACTIVITIES.filter(a=>a.section===sec.code);
+    const t=wAvg(list,curM,false), v=wAvg(list,curM,true);
+    return `<span class="marquee-item"><b>แผนหลักที่ ${sec.code.replace('.','')}</b> เป้าหมาย <span class="mq-tgt">${fmt(t)}%</span> · ผลงาน <span class="mq-act${v==null?' na':''}">${v==null?'–':fmt(v)+'%'}</span></span>`;
+  }).join('');
+  track.innerHTML=items+items; // exact duplicate เพื่อให้ลูป translateX(-50%) ต่อเนื่องไร้รอยต่อ
+}
+function renderAll(){renderPlanBoxes();renderMarquee();renderScurve();renderSecBar();renderTable();}
 
 /* ============ popup ============ */
 const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');
